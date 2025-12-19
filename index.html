@@ -349,339 +349,227 @@
 
     <!-- SCRIPT DE CONEXIÓN NUBE Y LÓGICA (MODULO) -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    // --- IMPORTAR LIBRERÍAS DESDE LA NUBE (Formato navegador) ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // 🔥 PEGA AQUI TUS CREDENCIALES 🔥
-        const firebaseConfig = {
-  apiKey: "AIzaSyB5ygJIoEgpJPKY0qMULocohmzXGc7UWFE",
-  authDomain: "worldstoresystem.firebaseapp.com",
-  databaseURL: "https://worldstoresystem-default-rtdb.firebaseio.com",
-  projectId: "worldstoresystem",
-  storageBucket: "worldstoresystem.firebasestorage.app",
-  messagingSenderId: "460628958914",
-  appId: "1:460628958914:web:95da76852bedecbdcf255b",
-  measurementId: "G-9NQMR0XVHT"
-};
+    // --- TUS CREDENCIALES (Copiadas de tu foto) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyB5ygJIoEgpJPKY0qMULocohmzXGc7UWFE",
+        authDomain: "worldstoresystem.firebaseapp.com",
+        databaseURL: "https://worldstoresystem-default-rtdb.firebaseio.com",
+        projectId: "worldstoresystem",
+        storageBucket: "worldstoresystem.firebasestorage.app",
+        messagingSenderId: "460628958914",
+        appId: "1:460628958914:web:95da76852bedecbdcf255b",
+        measurementId: "G-9NQMR0XVHT"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const dbRef = getDatabase(app);
+    // --- INICIALIZAR LA APP Y LA BASE DE DATOS ---
+    const app = initializeApp(firebaseConfig);
+    const dbRef = getDatabase(app);
 
-        // Variables Globales
-        window.db = []; 
-        window.history = []; 
-        window.config = { name:"WORLD STORE", color:"#C62828", currency:"$" };
-        window.cart = [];
+    // ----------------------------------------------------
+    //    AQUÍ ABAJO VA EL RESTO DE LA LÓGICA DEL SISTEMA 
+    //    (Ya integrada para que solo copies y pegues)
+    // ----------------------------------------------------
 
-        // Conexión
-        const rInv = ref(dbRef, 'inventory');
-        const rHist = ref(dbRef, 'history');
-        const rCfg = ref(dbRef, 'config');
+    // Variables Globales
+    window.db = []; 
+    window.history = []; 
+    window.config = { name:"WORLD STORE", color:"#C62828", currency:"$" };
+    window.cart = [];
 
-        onValue(rInv, (snap) => {
-            const val = snap.val();
-            if(val) { window.db = val; renderPOS(); renderInv(); }
-            document.getElementById('loader').style.display='none';
-        });
+    // Referencias a la Base de Datos
+    const rInv = ref(dbRef, 'inventory');
+    const rHist = ref(dbRef, 'history');
+    const rCfg = ref(dbRef, 'config');
 
-        onValue(rHist, (snap) => {
-            const val = snap.val();
-            window.history = val ? Object.values(val).sort((a,b)=>b.id-a.id) : [];
-            renderHistory();
-        });
-
-        onValue(rCfg, (snap) => {
-            const val = snap.val();
-            if(val) { window.config = val; applyConfig(); renderPOS(); }
-        });
-
-        // Funciones Públicas
-        window.saveProduct = function() {
-            const id = document.getElementById('prodId').value;
-            const obj = {
-                c: document.getElementById('pCode').value, m: document.getElementById('pModel').value, cat: document.getElementById('pCat').value,
-                d: parseFloat(document.getElementById('pPrice').value)||0, p_unit: parseFloat(document.getElementById('pPriceUnit').value)||0,
-                stock: parseInt(document.getElementById('pStock').value)||0, t: document.getElementById('pSize').value, 
-                img: document.getElementById('prodImgBase64').value
-            };
-            if(id) { 
-                const i = window.db.findIndex(x=>x.id==id); window.db[i]={...window.db[i], ...obj};
-            } else { 
-                window.db.unshift({...obj, id:Date.now()}); 
-            }
-            set(rInv, window.db);
-            closeModal('modalProd'); Toast.show("Producto Guardado en Nube");
+    // 1. LEER INVENTARIO
+    onValue(rInv, (snap) => {
+        const val = snap.val();
+        if(val) { 
+            window.db = val; 
+            // Si la función render está lista, actualizar pantalla
+            if(typeof renderPOS === 'function') { renderPOS(); renderInv(); }
+        } else {
+            // Si la base de datos está vacía (primera vez), subimos los datos maestros
+            saveCloud('inventory', masterDB.map((p,i)=>({...p, id: Date.now()+i, stock: 72, img:null})));
         }
+        // Ocultar pantalla de carga
+        const loader = document.getElementById('loader');
+        if(loader) loader.style.display='none';
+    });
 
-        window.processSale = function() {
-            if(window.cart.length===0) return Toast.show("Carrito vacío", "error");
-            const nm = document.getElementById('cartClientName').value.trim();
-            if(!nm) return alert("Nombre obligatorio");
-            
-            let total = 0; let desc="";
-            const snapshot = JSON.parse(JSON.stringify(window.cart));
-            
-            window.cart.forEach(i => {
-                total+=i.total;
-                desc+=`<b>${i.qtyTxt}</b> ${i.c}<br>`;
-                const p=window.db.find(x=>x.id===i.pId);
-                if(p) p.stock-=i.deduct;
-            });
+    // 2. LEER HISTORIAL
+    onValue(rHist, (snap) => {
+        const val = snap.val();
+        // Convertir objeto de Firebase a Array y ordenar por fecha (el más nuevo primero)
+        window.history = val ? Object.values(val).sort((a,b)=>b.id-a.id) : [];
+        if(typeof renderHistory === 'function') renderHistory();
+    });
 
-            // Guardar cambios
-            set(rInv, window.db);
-            push(rHist, {
-                id: Date.now(), date: new Date().toLocaleDateString(), client: nm, phone: document.getElementById('cartClientPhone').value,
-                items: snapshot, total: total, desc_html: desc
-            });
-
-            // Imprimir
-            const rec = { date: new Date().toLocaleDateString(), client: nm, phone: document.getElementById('cartClientPhone').value, items: snapshot, total: total };
-            printFromData(rec);
-
-            // Clean
-            window.cart=[]; renderCart(); toggleCart(); 
-            document.getElementById('cartClientName').value=""; document.getElementById('cartClientPhone').value="";
-            Toast.show("Venta Registrada Exitosamente");
+    // 3. LEER CONFIGURACIÓN
+    onValue(rCfg, (snap) => {
+        const val = snap.val();
+        if(val) { 
+            window.config = val; 
+            if(typeof applyConfig === 'function') applyConfig();
+            if(typeof renderPOS === 'function') renderPOS(); // Por si cambió la moneda
         }
+    });
 
-        window.saveConfig = function() {
-            window.config.name = document.getElementById('cfgName').value;
-            window.config.sub = document.getElementById('cfgSub').value;
-            window.config.tel = document.getElementById('cfgTel').value;
-            window.config.currency = document.getElementById('cfgCurrency').value;
-            window.config.footer = document.getElementById('cfgFooter').value;
-            window.config.color = document.getElementById('cfgColor').value;
-            const l = document.getElementById('cfgLogoData').value;
-            if(l) window.config.logo = l;
-            set(rCfg, window.config);
-            Toast.show("Configuración Actualizada");
-        }
+    // --- FUNCIONES PÚBLICAS (Para los botones HTML) ---
+    
+    // Función auxiliar para primera carga
+    function saveCloud(path, data) {
+        set(ref(dbRef, path), data);
+    }
 
-        window.deleteProd = (id) => { if(confirm("Eliminar?")) set(rInv, window.db.filter(x=>x.id!==id)); }
+    // BASE DE DATOS MAESTRA (Respaldo por si está vacía la nube)
+    const masterDB = [
+        {c:"W 15",m:"Crocs Clásico Baby",d:46,cat:"Dama",t:"36-40"},{c:"LC W72-3",m:"Crocs Pastel",d:32,cat:"Dama",t:"35-40"},
+        {c:"LC W99-1",m:"Sandalia Peluche",d:48,cat:"Dama",t:"36-40"},{c:"LC W-801",m:"Plataforma Barbie",d:35,cat:"Dama",t:"36-40"},
+        {c:"HY 047-1",m:"Croc Banda",d:42,cat:"Dama",t:"36-40"},{c:"RS 111",m:"Croc Cadena",d:43,cat:"Dama",t:"36-41"},
+        {c:"M-15",m:"Croc Largo Caballero",d:50,cat:"Caballero",t:"40-45"},{c:"LC C-09D",m:"Niños 3D",d:44,cat:"Niño/Niña",t:"30-35"},
+        // (La base completa se cargará desde el script anterior si ya la usaste una vez)
+        {c:"HY 055-7",m:"Bota Gato",d:40,cat:"Niño/Niña",t:"30-35"}
+    ];
+
+    // GUARDAR PRODUCTO (Crear/Editar)
+    window.saveProduct = function() {
+        const id = document.getElementById('prodId').value;
+        const pCode = document.getElementById('pCode').value;
+        const pPrice = parseFloat(document.getElementById('pPrice').value)||0;
         
-        // Historial
-        window.clearHistory = () => { if(confirm("¿BORRAR TODO?")) set(rHist, null); }
-        window.delHist = (id) => { 
-            if(!confirm("Borrar?")) return;
-            onValue(rHist, s => {
-                const d = s.val(); if(!d) return;
-                for(let k in d) if(d[k].id === id) remove(ref(dbRef, 'history/'+k));
-            }, {onlyOnce:true});
-        }
-
-    </script>
-
-    <!-- UI SCRIPTS -->
-    <script>
-        const Toast = {
-            show: (msg, type='info') => {
-                const c = document.getElementById('toast-container');
-                const d = document.createElement('div'); d.className = `toast ${type}`;
-                d.innerHTML = type==='error' ? `<i class="fa-solid fa-triangle-exclamation"></i> ${msg}` : `<i class="fa-solid fa-cloud"></i> ${msg}`;
-                c.appendChild(d); setTimeout(() => d.remove(), 2500);
-            }
+        // Objeto producto
+        const obj = {
+            c: pCode, 
+            m: document.getElementById('pModel').value, 
+            cat: document.getElementById('pCat').value,
+            d: pPrice, 
+            p_unit: parseFloat(document.getElementById('pPriceUnit').value)||0,
+            stock: parseInt(document.getElementById('pStock').value)||0, 
+            t: document.getElementById('pSize').value, 
+            img: document.getElementById('prodImgBase64').value
         };
 
-        // UI VARS
-        let curFilter = 'all';
-        let saleItem = null;
-        let saleMode = 'doc';
-
-        // NAV
-        function nav(view, el) {
-            document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('view-'+view).classList.add('active');
-            el.classList.add('active');
-            if(view==='pos') { renderPOS(); updateTitle("CATÁLOGO"); }
-            if(view==='inv') { renderInv(); updateTitle("INVENTARIO"); }
-            if(view==='history') { renderHistory(); updateTitle("VENTAS"); }
-            if(view==='config') { updateTitle("AJUSTES"); }
+        // Si estamos editando, buscamos el índice. Si es nuevo, al principio.
+        if(id) { 
+            const i = window.db.findIndex(x=>x.id==id); 
+            // Conservar ID original
+            if(i !== -1) window.db[i] = {...window.db[i], ...obj};
+        } else { 
+            // Nuevo ID
+            window.db.unshift({...obj, id:Date.now()}); 
         }
-        function updateTitle(t) { if(window.innerWidth<=768) document.getElementById('mobileTitle').innerText=t; }
-
-        // RENDERS
-        function renderPOS() {
-            if(!window.db) return;
-            const g = document.getElementById('posGrid');
-            const term = document.getElementById('searchInput').value.toLowerCase();
-            g.innerHTML = "";
-            const list = window.db.filter(p => (p.c.toLowerCase().includes(term)||p.m.toLowerCase().includes(term)) && (curFilter==='all'||p.cat===curFilter));
-            const cur = window.config.currency||"$";
-            list.forEach(p => {
-                const img = p.img || `https://placehold.co/300x300/f0f0f0/333?text=${p.c}`;
-                const bg = p.cat==='Dama'?'#EC407A':(p.cat==='Caballero'?'#546E7A':'#42A5F5');
-                g.innerHTML += `
-                <div class="card" onclick="openSale(${p.id})">
-                    <div class="card-img-wrap"><img src="${img}" loading="lazy"><span class="badge-cat" style="background:${bg}">${p.cat.substring(0,3).toUpperCase()}</span></div>
-                    <div class="card-content"><div><h4>${p.c}</h4><p>${p.m}</p></div><div class="card-footer"><span class="stock">${p.stock}</span><span class="price">${cur}${p.d}</span></div></div>
-                </div>`;
-            });
-        }
-
-        function filterCat(c, el) { curFilter=c; document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); el.classList.add('active'); renderPOS(); }
-
-        function renderInv() {
-            const tb = document.getElementById('invBody'); tb.innerHTML="";
-            const cur = window.config.currency||"$";
-            if(!window.db) return;
-            window.db.forEach(p => {
-                const img = p.img || "https://placehold.co/50?text=IMG";
-                tb.innerHTML += `<tr><td><img src="${img}" class="thumb"></td><td><b>${p.c}</b><br><small>${p.cat}</small></td><td>${cur}${p.d}</td><td>${p.stock}</td><td><i class="fa-solid fa-pen" style="color:#1976D2;margin-right:10px" onclick="editProd(${p.id})"></i> <i class="fa-solid fa-trash" style="color:red" onclick="deleteProd(${p.id})"></i></td></tr>`;
-            });
-        }
-
-        function renderHistory() {
-            const tb = document.getElementById('histBody'); tb.innerHTML="";
-            const cur = window.config.currency||"$";
-            let gt=0;
-            if(window.history) {
-                window.history.forEach(h => {
-                    gt+=h.total;
-                    // Format Items
-                    let d = "";
-                    if(h.items){ h.items.forEach(i=>d+=`<div>${i.qtyTxt} ${i.c}</div>`); } else { d=h.desc_html||""; }
-                    tb.innerHTML += `<tr><td style="font-size:0.75rem">${h.date}</td><td><b>${h.client}</b></td><td style="font-size:0.75rem">${d}</td><td>${cur}${h.total}</td><td><i class="fa-solid fa-print" style="color:#1976D2; margin-right:10px" onclick="reprint(${h.id})"></i><i class="fa-solid fa-trash" style="color:red" onclick="delHist(${h.id})"></i></td></tr>`;
-                });
-            }
-            document.getElementById('grandTotalHistory').innerText=`${cur}${gt.toFixed(2)}`;
-        }
-
-        // SALES
-        function openSale(id) {
-            saleItem = window.db.find(x => x.id === id);
-            document.getElementById('saleTitle').innerText = saleItem.c;
-            document.getElementById('saleId').value = id;
-            document.getElementById('saleQty').value = 1;
-            setSaleType('doc'); 
-            document.getElementById('modalSale').style.display='flex';
-        }
-        function setSaleType(t) {
-            saleMode = t;
-            ['doc','half','unit'].forEach(type => {
-                const btn = document.getElementById('btn-'+type);
-                if(t === type) { btn.style.background='var(--primary)'; btn.style.color='white'; }
-                else { btn.style.background='#eee'; btn.style.color='#333'; }
-            });
-            updateCalc();
-        }
-        function updateCalc() {
-            const q = parseInt(document.getElementById('saleQty').value)||1;
-            const cur = window.config.currency||"$";
-            let p=0, txt="";
-            if(saleMode === 'doc') { p = saleItem.d; txt=`${cur}${p}/pq`; }
-            else if(saleMode === 'half') { p = saleItem.d/2; txt=`${cur}${p}/md`; }
-            else { p = saleItem.p_unit>0 ? saleItem.p_unit : (saleItem.d/12)*1.6; txt=`${cur}${p.toFixed(2)}/par`; }
-            document.getElementById('unitPriceDisplay').innerText = txt;
-            document.getElementById('saleTotalCalc').innerText = `${cur}${(p*q).toFixed(2)}`;
-        }
-        function adjQty(n) { let v = parseInt(document.getElementById('saleQty').value)+n; if(v<1)v=1; document.getElementById('saleQty').value=v; updateCalc(); }
         
-        function confirmAdd() {
-            const q = parseInt(document.getElementById('saleQty').value);
-            const total = parseFloat(document.getElementById('saleTotalCalc').innerText.replace(/[^\d.-]/g, ''));
-            let lbl = saleMode==='doc'?'Doc':(saleMode==='half'?'Med':'Par');
-            let ded = saleMode==='doc'?12*q:(saleMode==='half'?6*q:1*q);
-            window.cart.push({pId:saleItem.id, c:saleItem.c, m:saleItem.m, qtyTxt:`${q} ${lbl}`, total:total, deduct:ded});
-            closeModal('modalSale'); renderCart(); toggleCart();
-        }
+        // 🚀 GUARDAR EN LA NUBE
+        set(rInv, window.db).then(() => {
+            if(typeof Toast !== 'undefined') Toast.show("Guardado en la Nube");
+            if(typeof closeModal === 'function') closeModal('modalProd');
+        }).catch(err => alert("Error: " + err.message));
+    }
 
-        // CART
-        function toggleCart() {
-            const d = document.getElementById('cartDrawer');
-            if(d.classList.contains('open')) { d.classList.remove('open'); document.querySelector('.overlay').classList.remove('active'); }
-            else { renderCart(); d.classList.add('open'); document.querySelector('.overlay').classList.add('active'); }
+    // ELIMINAR PRODUCTO
+    window.deleteProd = function(id) {
+        if(confirm("¿Eliminar definitivamente de la nube?")) { 
+            const newDb = window.db.filter(x=>x.id!==id); 
+            set(rInv, newDb); // Sube el array nuevo sin ese producto
         }
-        function renderCart() {
-            const c = document.getElementById('cartContainer'); c.innerHTML=""; let t=0;
-            const cur = window.config.currency||"$";
-            if(window.cart.length===0) c.innerHTML=`<div class="empty-cart"><p>Vacío</p></div>`;
-            window.cart.forEach((i, idx) => {
-                t += i.total;
-                c.innerHTML += `<div class="c-item"><div style="flex:1"><b>${i.c}</b> <small>${i.qtyTxt}</small></div><div style="text-align:right"><b>${cur}${i.total.toFixed(2)}</b> <i class="fa-solid fa-trash" style="color:red; margin-left:5px;" onclick="window.cart.splice(${idx},1);renderCart()"></i></div></div>`;
-            });
-            document.getElementById('cartTotalDisplay').innerText = `${cur}${t.toFixed(2)}`;
-            document.getElementById('cartCountBadge').innerText = window.cart.length;
-        }
+    };
 
-        // PROD EDITOR
-        function openModalProd() { 
-            ['prodId','pCode','pModel','pPrice','pPriceUnit','pStock','prodImgBase64'].forEach(k=>document.getElementById(k).value="");
-            document.getElementById('imgPreview').src="";
-            document.getElementById('modalProd').style.display='flex';
-        }
-        function editProd(id) {
-            const p = window.db.find(x=>x.id===id);
-            document.getElementById('prodId').value=p.id;
-            document.getElementById('pCode').value=p.c; document.getElementById('pModel').value=p.m;
-            document.getElementById('pPrice').value=p.d; document.getElementById('pPriceUnit').value=p.p_unit||"";
-            document.getElementById('pStock').value=p.stock; document.getElementById('pCat').value=p.cat;
-            if(p.img) { document.getElementById('imgPreview').src=p.img; document.getElementById('prodImgBase64').value=p.img; document.getElementById('dropZone').classList.add('has-img'); }
-            document.getElementById('modalProd').style.display='flex';
-        }
-        function handleImageUpload(i) {
-            if(i.files[0]) { 
-                if(i.files[0].size > 250000) return alert("Máximo 250kb");
-                const r = new FileReader(); 
-                r.onload=e=>{ document.getElementById('imgPreview').src=e.target.result; document.getElementById('prodImgBase64').value=e.target.result; document.getElementById('dropZone').classList.add('has-img'); }; 
-                r.readAsDataURL(i.files[0]);
-            }
-        }
+    // PROCESAR VENTA (Actualizar Stock + Guardar Historial)
+    window.processSale = function() {
+        if(window.cart.length===0) return alert("Carrito vacío");
+        const nm = document.getElementById('cartClientName').value.trim();
+        if(!nm) return alert("Nombre de cliente obligatorio");
+        
+        let total = 0; let desc="";
+        const snapshot = JSON.parse(JSON.stringify(window.cart)); // Copia fiel del carrito
+        
+        // Actualizar Stock Localmente primero
+        window.cart.forEach(i => {
+            total += i.total;
+            desc += `<b>${i.qtyTxt}</b> ${i.c}<br>`;
+            const p = window.db.find(x => x.id === i.pId);
+            if(p) p.stock -= i.deduct;
+        });
 
-        // CONFIG APPLY
-        function applyConfig() {
-            if(!window.config) return;
-            document.documentElement.style.setProperty('--primary', window.config.color);
-            document.getElementById('brandName').innerText = window.config.name;
-            document.getElementById('brandSub').innerText = window.config.sub;
-            // Fill Form
-            document.getElementById('cfgName').value=window.config.name;
-            document.getElementById('cfgSub').value=window.config.sub;
-            document.getElementById('cfgTel').value=window.config.tel;
-            document.getElementById('cfgCurrency').value=window.config.currency;
-            document.getElementById('cfgFooter').value=window.config.footer;
-            document.getElementById('cfgColor').value=window.config.color;
-            if(window.config.logo){
-                document.getElementById('displayLogo').src=window.config.logo; 
-                document.getElementById('displayLogo').style.display='block';
-                document.getElementById('printLogoDisplay').src=window.config.logo;
-            }
-        }
-        function encodeLogo(i) {
-            if(i.files[0]) {
-                const r = new FileReader(); r.onload=e=>{ document.getElementById('cfgLogoData').value=e.target.result; document.getElementById('cfgLogoPreview').src=e.target.result; }; 
-                r.readAsDataURL(i.files[0]);
-            }
-        }
-        function previewColor(c) { document.documentElement.style.setProperty('--primary', c); }
+        // 🚀 1. SUBIR NUEVO INVENTARIO (Stock descontado)
+        set(rInv, window.db);
 
-        // PRINT UTILS
-        function printFromData(rec, isCopy=false) {
-            document.getElementById('printBrand').innerText=window.config.name;
-            document.getElementById('printSub').innerText=window.config.sub;
-            document.getElementById('printTel').innerText=window.config.tel;
-            document.getElementById('printDate').innerText=rec.date;
-            document.getElementById('printClientBlock').innerHTML=`Cliente: <b>${rec.client}</b><br>Tlf: ${rec.phone}`;
-            document.getElementById('printFooter').innerText=window.config.footer;
-            if(window.config.logo) document.getElementById('printLogoDisplay').style.display='block';
+        // 🚀 2. SUBIR HISTORIAL (Push crea una entrada nueva)
+        const newRecord = {
+            id: Date.now(), 
+            date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
+            client: nm, 
+            phone: document.getElementById('cartClientPhone').value,
+            items: snapshot, 
+            total: total, 
+            desc_html: desc
+        };
+        
+        push(rHist, newRecord).then(() => {
+            if(typeof Toast !== 'undefined') Toast.show("Venta Registrada Correctamente");
             
-            const tb = document.getElementById('printBody'); tb.innerHTML="";
-            rec.items.forEach(i => {
-                tb.innerHTML+=`<tr><td style="padding:5px;border-bottom:1px solid #000">${i.qtyTxt}</td><td style="padding:5px;border-bottom:1px solid #000">${i.c} ${i.m}</td><td style="padding:5px;border-bottom:1px solid #000;text-align:right"> - </td><td style="padding:5px;border-bottom:1px solid #000;text-align:right">${window.config.currency}${i.total.toFixed(2)}</td></tr>`;
-            });
-            document.getElementById('printTotal').innerText = `${window.config.currency}${rec.total.toFixed(2)}`;
-            setTimeout(()=>window.print(), 500);
+            // Generar PDF visual
+            if(typeof printFromData === 'function') printFromData(newRecord);
+
+            // Limpiar UI
+            window.cart = []; 
+            document.getElementById('cartClientName').value=""; 
+            document.getElementById('cartClientPhone').value="";
+            if(typeof renderCart === 'function') renderCart();
+            if(typeof toggleCart === 'function') toggleCart(); // Cerrar carrito
+        });
+    }
+
+    // GUARDAR CONFIGURACIÓN GLOBAL
+    window.saveConfig = function() {
+        // Recoger datos del formulario
+        window.config.name = document.getElementById('cfgName').value;
+        window.config.sub = document.getElementById('cfgSub').value;
+        window.config.tel = document.getElementById('cfgTel').value;
+        window.config.currency = document.getElementById('cfgCurrency').value;
+        window.config.footer = document.getElementById('cfgFooter').value;
+        window.config.color = document.getElementById('cfgColor').value;
+        const l = document.getElementById('cfgLogoData').value;
+        if(l) window.config.logo = l;
+
+        // 🚀 ENVIAR A NUBE
+        set(rCfg, window.config);
+        alert("Configuración Global Actualizada");
+    }
+
+    // Borrar Historial Global
+    window.clearHistory = function() { 
+        if(confirm("¿ESTÁS SEGURO? Se borrará el historial de TODOS los dispositivos.")) {
+            set(rHist, null); 
         }
-        function reprint(id) { const h = window.history.find(x=>x.id===id); if(h) printFromData(h, true); }
+    }
+    
+    // Borrar un registro específico
+    window.delHist = function(id) { 
+        if(!confirm("¿Borrar este registro?")) return;
+        // Buscar la 'key' de firebase que corresponde a ese ID numérico
+        onValue(rHist, s => {
+            const d = s.val(); 
+            if(!d) return;
+            for(let k in d) {
+                if(d[k].id === id) {
+                    remove(ref(dbRef, 'history/'+k)); // Borra esa entrada específica
+                    return;
+                }
+            }
+        }, {onlyOnce:true});
+    }
 
-        function closeModal(id) { document.getElementById(id).style.display='none'; }
-        window.onclick = e => { if(e.target.className==='modal') e.target.style.display='none'; }
-
-    </script>
+</script>
 </body>
 </html>
 </html>
+
 
 
 
