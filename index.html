@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>World Store V9.2 - Gestión Financiera</title>
+    <title>World Store V9.3 - Finanzas Pro</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -31,6 +31,7 @@
         /* --- SIDEBAR --- */
         aside { width: var(--sidebar-width); background: var(--dark); color: white; display: flex; flex-direction: column; height: 100%; z-index: 50; box-shadow: 4px 0 15px rgba(0,0,0,0.1); transition: 0.3s;}
         .brand { padding: 30px 20px; text-align: center; background: rgba(0,0,0,0.2); }
+        /* Ajuste de logo circular/contenido */
         #displayLogoSidebar { width: 90px; height: 90px; object-fit: contain; border-radius: 50%; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2); background:white; display:none; }
         
         .brand h1 { margin: 0; font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; }
@@ -65,7 +66,7 @@
         .view-panel.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- GRID & CARDS --- */
+        /* --- GRID --- */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
         .card { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); cursor: pointer; display: flex; flex-direction: column; height: 100%; position: relative;}
         .card:active { transform: scale(0.97); }
@@ -99,7 +100,7 @@
         .modal-box { background: white; width: 500px; max-width: 100%; padding: 20px; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: slideUp 0.3s; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { opacity: 1; transform: translateY(0); } }
         
-        /* DISEÑO DE CONFIGURACION Y CUENTAS */
+        /* DISEÑO DE CONFIGURACION */
         .settings-header { font-size:1.5rem; font-weight:800; margin-bottom:15px; display:flex; align-items:center; gap:10px; color: #333; }
         .config-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
         .section-title { font-weight: 700; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 15px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;}
@@ -175,11 +176,13 @@
             <div class="nav-item" onclick="nav('history', this)"><i class="fa-solid fa-receipt"></i> <span>Ventas</span></div>
             <div class="nav-item" onclick="nav('inv', this)"><i class="fa-solid fa-boxes-stacked"></i> <span>Inventario</span></div>
             <div class="nav-item" onclick="toggleCart()"><i class="fa-solid fa-cart-shopping"></i> <span>Carrito <b id="cartCountBadge" style="background:var(--primary); color:white; padding:1px 6px; border-radius:10px; font-size:0.7em;">0</b></span></div>
+            
             <!-- NUEVA PESTAÑA CUENTAS -->
-            <div class="nav-item" onclick="nav('accounts', this)"><i class="fa-solid fa-chart-line"></i> <span>Cuentas</span></div>
+            <div class="nav-item" onclick="nav('accounts', this)"><i class="fa-solid fa-chart-line"></i> <span>CUENTAS</span></div>
+            
             <div class="nav-item" onclick="nav('config', this)"><i class="fa-solid fa-sliders"></i> <span>Configuración</span></div>
         </div>
-        <div class="sys-info"><span id="footerBrand">SISTEMA v9.2</span></div>
+        <div class="sys-info"><span id="footerBrand">SISTEMA v9.3</span></div>
     </aside>
 
     <main>
@@ -191,7 +194,7 @@
             </div>
             <div class="search-wrap">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="searchInput" placeholder="Buscar modelo, código..." onkeyup="renderPOS()">
+                <input type="text" id="searchInput" autocomplete="off" placeholder="Buscar modelo, código..." onkeyup="renderPOS()">
             </div>
             <div class="filter-group">
                 <div class="chip active" onclick="filterCat('all', this)">Todo</div>
@@ -235,48 +238,48 @@
             </div>
         </div>
 
-        <!-- NUEVA PESTAÑA DE CUENTAS / FINANZAS -->
+        <!-- CUENTAS (FINANZAS) - MODULO CORREGIDO -->
         <div id="view-accounts" class="view-panel">
             <div class="settings-header"><i class="fa-solid fa-sack-dollar"></i> Finanzas & Rentabilidad</div>
 
             <!-- KPI CARDS -->
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:20px;">
                 
-                <!-- Valor Total Inventario (Costo) -->
+                <!-- Costo Inventario -->
                 <div style="background:white; padding:20px; border-radius:12px; border-left:5px solid #d32f2f; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                    <div style="font-size:0.8rem; font-weight:600; color:#777; text-transform:uppercase;">Inversión (Costo Total)</div>
+                    <div style="font-size:0.8rem; font-weight:600; color:#777; text-transform:uppercase;">Valor Inventario (Costo)</div>
                     <div style="font-size:1.6rem; font-weight:800; color:#333; margin-top:5px;" id="kpi-cost">$0.00</div>
-                    <div style="font-size:0.7rem; color:#aaa;">Costo de mercancia en stock</div>
+                    <div style="font-size:0.7rem; color:#aaa;">Stock x Costo Flete</div>
                 </div>
 
-                <!-- Valor Total Inventario (Venta) -->
+                <!-- Valor Venta -->
                 <div style="background:white; padding:20px; border-radius:12px; border-left:5px solid #1976D2; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                    <div style="font-size:0.8rem; font-weight:600; color:#777; text-transform:uppercase;">Valor Venta Total</div>
+                    <div style="font-size:0.8rem; font-weight:600; color:#777; text-transform:uppercase;">Valor Venta Potencial</div>
                     <div style="font-size:1.6rem; font-weight:800; color:#333; margin-top:5px;" id="kpi-sale">$0.00</div>
-                    <div style="font-size:0.7rem; color:#aaa;">Valor venta en stock</div>
+                    <div style="font-size:0.7rem; color:#aaa;">Stock x Precio Venta</div>
                 </div>
 
-                <!-- Ganancia Potencial -->
+                <!-- Ganancia Proyectada -->
                 <div style="background:white; padding:20px; border-radius:12px; border-left:5px solid #FFC107; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                    <div style="font-size:0.8rem; font-weight:600; color:#777; text-transform:uppercase;">Ganancia Potencial</div>
+                    <div style="font-size:0.8rem; font-weight:600; color:#777; text-transform:uppercase;">Ganancia x Cobrar</div>
                     <div style="font-size:1.6rem; font-weight:800; color:#FF8F00; margin-top:5px;" id="kpi-profit">$0.00</div>
-                    <div style="font-size:0.7rem; color:#aaa;">(P.Venta - Costo) de Stock Actual</div>
+                    <div style="font-size:0.7rem; color:#aaa;">Margen Neto del Stock Actual</div>
                 </div>
 
-                <!-- Ganancia Real (Ventas) -->
+                <!-- Ganancia Realizada -->
                 <div style="background:white; padding:20px; border-radius:12px; border-left:5px solid #388E3C; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                    <div style="font-size:0.8rem; font-weight:600; color:#777; text-transform:uppercase;">Ganancia Realizada</div>
+                    <div style="font-size:0.8rem; font-weight:600; color:#777; text-transform:uppercase;">Ganancia Real (Caja)</div>
                     <div style="font-size:1.6rem; font-weight:800; color:#388E3C; margin-top:5px;" id="kpi-realized">$0.00</div>
-                    <div style="font-size:0.7rem; color:#aaa;">Basado en historial de ventas</div>
+                    <div style="font-size:0.7rem; color:#aaa;">Ventas - Costo Vendido</div>
                 </div>
             </div>
 
             <!-- DETALLE DE PRECIOS -->
             <div class="config-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
-                    <div class="section-title" style="margin:0; border:none;">Rentabilidad por Referencia (Por Docena)</div>
+                    <div class="section-title" style="margin:0; border:none;">Rentabilidad por Referencia (Docena)</div>
                     <button class="btn btn-blue" style="width:auto; padding:8px 15px; font-size:0.8rem;" onclick="updateCostsFromImage()">
-                        <i class="fa-solid fa-arrows-rotate"></i> 🔄 Sincronizar Costos Flete (Tabla PNG)
+                        <i class="fa-solid fa-arrows-rotate"></i> 🔄 Sincronizar Costos PNG
                     </button>
                 </div>
                 
@@ -285,11 +288,11 @@
                         <thead style="background:#455A64; color:white;">
                             <tr>
                                 <th>Referencia</th>
-                                <th>Costo Flete (Doc)</th>
-                                <th>Precio Venta (Doc)</th>
-                                <th>Ganancia (Doc)</th>
-                                <th>Stock Actual</th>
-                                <th>Costo Total Stock</th>
+                                <th>Costo Flete</th>
+                                <th>Precio Venta</th>
+                                <th>Ganancia/Doc</th>
+                                <th>Stock (Paq)</th>
+                                <th>Total Costo</th>
                             </tr>
                         </thead>
                         <tbody id="accountsBody"></tbody>
@@ -321,11 +324,11 @@
                 </div>
 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                    <div class="form-row"><label>Nombre Empresa (Título Principal)</label><input type="text" id="cfgName" placeholder="WORLD STORE"></div>
+                    <div class="form-row"><label>Nombre Empresa</label><input type="text" id="cfgName" placeholder="WORLD STORE"></div>
                     <div class="form-row"><label>Subtítulo / Eslogan</label><input type="text" id="cfgSub" placeholder="Mayoristas..."></div>
                 </div>
                 
-                <div class="form-row"><label>Color Principal del Tema</label><input type="color" id="cfgColor" style="height:45px;width:100%;padding:2px;cursor:pointer;" oninput="previewColor(this.value)"></div>
+                <div class="form-row"><label>Color Principal</label><input type="color" id="cfgColor" style="height:45px;width:100%;padding:2px;cursor:pointer;" oninput="previewColor(this.value)"></div>
             </div>
 
             <div class="config-card">
@@ -339,11 +342,11 @@
 
             <div class="config-card">
                 <div class="section-title">Anuncios y Estado</div>
-                <div class="form-row"><label>Anuncio Global (Banner amarillo superior)</label><input type="text" id="cfgBanner" placeholder="Ej: ¡Ofertas de Navidad!"></div>
+                <div class="form-row"><label>Anuncio Global (Banner)</label><input type="text" id="cfgBanner" placeholder="Ej: ¡Ofertas de Navidad!"></div>
                 
                 <label class="checkbox-wrap">
-                    <input type="checkbox" id="cfgMaintenance" style="width:20px;height:20px;">
-                    <span>ACTIVAR MODO MANTENIMIENTO (Bloquea Ventas)</span>
+                    <input type="checkbox" id="cfgMaintenance">
+                    <span>Activar Modo "Mantenimiento" (Oculta catálogo)</span>
                 </label>
             </div>
             
@@ -352,7 +355,7 @@
             <br><br><br>
             <div style="border-top:1px solid #eee; padding-top:20px; text-align:center;">
                 <p style="color:#666;font-size:0.8rem;">Zona de Recuperación</p>
-                <button class="btn btn-blue" style="background:#607D8B; max-width:300px;" onclick="window.reloadInitialData()"><i class="fa-solid fa-database"></i> Recargar Catálogo Base (PDF)</button>
+                <button class="btn btn-blue" style="background:#607D8B; max-width:300px;" onclick="window.reloadInitialData()"><i class="fa-solid fa-database"></i> Recargar Catálogo PDF Original</button>
             </div>
         </div>
     </main>
@@ -360,14 +363,14 @@
     <!-- DRAWER & MODALS -->
     <div id="cartDrawer" class="cart-drawer">
         <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin:0">🛒 Pedido</h3>
+            <h3 style="margin:0">🛒 Tu Pedido</h3>
             <button onclick="toggleCart()" style="background:none; border:none; font-size:1.5rem; padding:10px;">&times;</button>
         </div>
         <div class="cart-items" id="cartContainer"></div>
         <div class="cart-total-bar">
             <div class="client-inputs">
                 <input type="text" id="cartClientName" placeholder="Nombre Cliente *">
-                <input type="tel" id="cartClientPhone" placeholder="Teléfono" inputmode="tel">
+                <input type="tel" id="cartClientPhone" placeholder="Teléfono Contacto" inputmode="tel">
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:1.2rem; font-weight:bold;"><span>Total</span><span id="cartTotalDisplay" style="color:var(--primary)">$0.00</span></div>
             <button class="btn btn-success w-100" onclick="window.processSale()" style="padding:15px;font-size:1.1rem;">CONFIRMAR VENTA</button>
@@ -378,70 +381,72 @@
         <div class="modal-box">
             <h3 id="saleTitle" style="margin-top:0;">Producto</h3>
             <input type="hidden" id="saleId">
-            <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin:10px 0; text-align:center;">
+            <div style="background:#f9f9f9; padding:15px; border-radius:8px; margin:10px 0; text-align:center;">
+                <label style="display:block;margin-bottom:5px;font-weight:bold;font-size:0.8rem;">Seleccione Cantidad por:</label>
                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px;">
                     <button class="btn" style="font-size:0.75rem; padding:8px 2px;" id="btn-doc" onclick="setSaleType('doc')">DOCENA</button>
                     <button class="btn" style="font-size:0.75rem; padding:8px 2px; background:#eee;" id="btn-half" onclick="setSaleType('half')">MEDIA</button>
                     <button class="btn" style="font-size:0.75rem; padding:8px 2px; background:#eee;" id="btn-unit" onclick="setSaleType('unit')">PAR</button>
                 </div>
-                <div id="unitPriceDisplay" style="margin-top:8px; font-weight:600; color:#555;"></div>
+                <div id="unitPriceDisplay" style="margin-top:10px; font-weight:600; color:#555;"></div>
             </div>
             <div style="display:flex; gap:10px; margin-bottom:20px; align-items:center;">
                 <button class="btn" style="background:#eee; font-size:1.5rem; width:60px;" onclick="adjQty(-1)">-</button>
                 <input type="number" id="saleQty" value="1" min="1" inputmode="decimal" style="flex:1; text-align:center; padding:12px; font-size:1.3rem; border:1px solid #ddd; border-radius:8px; font-weight:bold;" onchange="updateCalc()">
                 <button class="btn" style="background:#eee; font-size:1.5rem; width:60px;" onclick="adjQty(1)">+</button>
             </div>
-            <div style="text-align:right; font-size:1.8rem; font-weight:800; color:var(--primary); margin-bottom:20px;"><span id="saleTotalCalc">$0.00</span></div>
+            <div style="text-align:right; font-size:2rem; font-weight:800; color:var(--primary); margin-bottom:20px;"><span id="saleTotalCalc">$0.00</span></div>
             <div style="display:flex; gap:10px;">
-                <button class="btn" style="background:#eee; flex:1;" onclick="closeModal('modalSale')">Volver</button>
-                <button class="btn btn-success" style="flex:2;" onclick="confirmAdd()">AGREGAR</button>
+                <button class="btn" style="background:#eee; flex:1;" onclick="closeModal('modalSale')">Cancelar</button>
+                <button class="btn btn-success" style="flex:2;" onclick="confirmAdd()">AGREGAR AL PEDIDO</button>
             </div>
         </div>
     </div>
 
     <div id="modalProd" class="modal">
         <div class="modal-box">
-            <h3 id="modalProdTitle" style="margin-top:0;">Editar Producto</h3>
+            <h3 id="modalProdTitle" style="margin-top:0;">Gestión de Producto</h3>
             <input type="hidden" id="prodId"><input type="hidden" id="prodImgBase64">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                <div style="grid-column:span 2"><label>Modelo</label><input type="text" id="pModel"></div>
+                <div style="grid-column:span 2"><label>Nombre / Modelo</label><input type="text" id="pModel"></div>
                 <div><label>Código</label><input type="text" id="pCode"></div>
                 <div><label>Categoría</label><select id="pCat"><option>Dama</option><option>Caballero</option><option>Niño/Niña</option></select></div>
-                <div><label>Precio Docena</label><input type="number" id="pPrice" inputmode="decimal"></div>
-                <div><label>Precio Par (Opc)</label><input type="number" id="pPriceUnit" inputmode="decimal" placeholder="Auto"></div>
-                <!-- CAMPO DE COSTO FLETE (NUEVO) -->
-                <div><label style="color:#d32f2f">Costo Flete (Doc)</label><input type="number" id="pCost" inputmode="decimal" placeholder="0.00"></div>
-                
-                <div><label>Stock Pares</label><input type="number" id="pStock" inputmode="numeric"></div>
-                <div style="grid-column:span 2"><label>Tallas</label><input type="text" id="pSize" value="36-40"></div>
+                <div><label>Precio Venta</label><input type="number" id="pPrice" inputmode="decimal"></div>
+                <div><label>Stock (Paq)</label><input type="number" id="pStock" inputmode="decimal"></div>
+                <!-- CAMPO COSTO FLETE -->
+                <div><label>Costo Flete</label><input type="number" id="pCost" inputmode="decimal" placeholder="Auto" style="border-color:orange;"></div>
+                <div><label>Tallas (Ej: 35-40)</label><input type="text" id="pSize"></div>
             </div>
-            <div class="file-upload" id="dropZone" onclick="document.getElementById('fileInput').click()" style="margin-top:15px;">
-                <span style="color:#aaa;"><i class="fa-solid fa-camera"></i> Subir Foto</span>
+            <div class="file-upload" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <span style="color:#aaa;"><i class="fa-solid fa-camera"></i> Toca para subir foto</span>
                 <img id="imgPreview">
                 <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="compressAndPreview(this.files[0], 'imgPreview', 'prodImgBase64')">
+                <div class="upload-loading">Procesando imagen...</div>
             </div>
             <div style="margin-top:20px; display:flex; gap:10px;">
                 <button class="btn btn-danger" onclick="closeModal('modalProd')">Cancelar</button>
-                <button class="btn btn-success" onclick="window.saveProduct()">GUARDAR</button>
+                <button class="btn btn-success" onclick="window.saveProduct()">GUARDAR CAMBIOS</button>
             </div>
         </div>
     </div>
 
-    <!-- PRINT LAYOUT -->
     <div id="print-layer">
         <div style="width:100%;max-width:800px;margin:0 auto;color:black;font-family:sans-serif;font-size:14px;">
-            <div style="border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:15px;display:flex;justify-content:space-between;">
-                <div>
-                    <img id="printLogoDisplay" style="height:60px;display:none;margin-bottom:5px;">
-                    <h1 id="printBrand" style="margin:0;font-size:22px;"></h1>
-                    <div id="printSub"></div><div id="printTel"></div>
+            <div style="border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:15px;display:flex;justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <img id="printLogoDisplay" style="height:70px;width:70px;object-fit:contain;display:none;">
+                    <div>
+                        <h1 id="printBrand" style="margin:0;font-size:22px;text-transform:uppercase;"></h1>
+                        <div id="printSub" style="font-weight:bold; color:#555;"></div>
+                        <div id="printTel" style="font-size:12px;"></div>
+                    </div>
                 </div>
-                <div style="text-align:right;"><h2 style="color:var(--primary);margin:0;">NOTA DE VENTA</h2><div>Fecha: <span id="printDate"></span></div></div>
+                <div style="text-align:right;"><h2 style="color:black;margin:0;">NOTA DE ENTREGA</h2><div style="margin-top:5px;">Fecha: <span id="printDate"></span></div></div>
             </div>
-            <div id="printClientBlock" style="border:1px solid #999;padding:8px;margin-bottom:15px;border-radius:4px;"></div>
-            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;"><thead><tr style="background:#eee;font-weight:bold;"><th style="padding:5px;text-align:left;">Cant</th><th style="padding:5px;text-align:left;">Descripción</th><th style="padding:5px;text-align:right;">Total</th></tr></thead><tbody id="printBody"></tbody></table>
-            <div style="text-align:right;font-size:18px;font-weight:bold;border-top:1px solid #000;padding-top:10px;">TOTAL: <span id="printTotal"></span></div>
-            <div id="printFooter" style="text-align:center;font-size:11px;margin-top:30px;color:#555;"></div>
+            <div id="printClientBlock" style="border:1px solid #ccc; padding:10px; margin-bottom:20px; border-radius:4px; background:#f9f9f9;"></div>
+            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;"><thead><tr style="background:#eee;font-weight:bold;text-transform:uppercase;font-size:12px;"><th style="padding:8px;text-align:left;">Cant.</th><th style="padding:8px;text-align:left;">Descripción</th><th style="padding:8px;text-align:right;">Subtotal</th></tr></thead><tbody id="printBody"></tbody></table>
+            <div style="text-align:right;font-size:20px;font-weight:bold;border-top:2px solid #000;padding-top:10px;">TOTAL A PAGAR: <span id="printTotal"></span></div>
+            <div id="printFooter" style="text-align:center;font-size:12px;margin-top:40px;color:#555;font-style:italic;"></div>
         </div>
     </div>
 
@@ -450,7 +455,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <script>
-        // CREDENCIALES (Asegúrate que sean las mismas de tu proyecto anterior)
+        // CONFIGURACIÓN DE FIREBASE (Mantenida Intacta)
         const firebaseConfig = {
             apiKey: "AIzaSyB5ygJIoEgpJPKY0qMULocohmzXGc7UWFE",
             authDomain: "worldstoresystem.firebaseapp.com",
@@ -467,29 +472,23 @@
         } catch(e) { console.error(e); }
         
         const dbRef = firebase.database();
-        let db=[], history=[], config={name:"WORLD STORE", color:"#C62828", currency:"$"};
+        let db=[], history=[], config={name:"WORLD STORE", sub:"ARIANA & GABRIEL", color:"#C62828", currency:"$", tel:"0424-7125937", footer:"Gracias por su compra"};
         let cart=[], curFilter='all', saleItem=null, saleMode='doc';
 
         // CONEXIONES
         dbRef.ref('inventory').on('value', s => { 
             db = s.val() || []; 
-            if(!s.val()) saveInitialData();
-            // Refrescar vistas segun este activa
+            if(!s.val()) saveInitialData(); 
             if(document.getElementById('view-accounts').classList.contains('active')) renderAccounts();
-            if(document.getElementById('view-pos').classList.contains('active')) renderPOS();
-            if(document.getElementById('view-inv').classList.contains('active')) renderInv();
-            
-            document.getElementById('loader').style.display='none'; 
+            renderPOS(); renderInv(); document.getElementById('loader').style.display='none'; 
         });
         dbRef.ref('history').on('value', s => { 
             history = s.val() ? Object.values(s.val()).sort((a,b)=>b.id-a.id) : []; 
             renderHistory(); 
-            // Tambien recalcula cuentas si llega venta nueva
             if(document.getElementById('view-accounts').classList.contains('active')) renderAccounts();
         });
-        dbRef.ref('config').on('value', s => { if(s.val()){ config=s.val(); applyConfig(); renderPOS(); } });
+        dbRef.ref('config').on('value', s => { if(s.val()){ config=s.val(); applyConfig(); renderPOS(); } else { saveConfig(); } });
 
-        // --- COMPRESOR IMAGENES ---
         window.compressAndPreview = function(file, imgPreviewId, hiddenInputId) {
             if(!file || !file.type.startsWith('image/')) return;
             const reader = new FileReader();
@@ -509,12 +508,13 @@
                     document.getElementById(imgPreviewId).src = dataUrl;
                     document.getElementById(imgPreviewId).style.display = 'block';
                     document.getElementById(hiddenInputId).value = dataUrl;
-                    if(imgPreviewId === 'imgPreview') document.getElementById('dropZone').classList.add('has-img');
+                    if(imgPreviewId === 'imgPreview') { document.getElementById('dropZone').classList.add('has-img'); }
+                    Toast.show("Imagen lista", "success");
                 }
             }
         };
 
-        // --- BD COSTOS ---
+        /* BASE DE DATOS DE COSTOS (TRANSCRITA DE LA IMAGEN DE TABLA) */
         const COSTS_DB = {
             "HY 001": 35.5, "HY 002-1": 30.5, "HY 002-3": 34.5, "HY 003-1": 26.5, "HY 006-1": 36.5, "LC C-04": 26.5, "HY 007": 24.5, "HY 009-1": 27.5, "HY 009-2": 27.5, "HY 010": 30.5, "HY 011-1": 41.5, "HY 011-2": 35.5, "LC 05": 26.5, "HY 013": 21.5, "LC 07-1": 24.5, "HY 015": 23.5, "HY 015-1": 23.5, "HY 016": 30.5, "HY 016-1": 40.5, "HY 017-1": 21.5, "HY 017-2": 21.5, "HY 018-1": 24.5, "HY 018-2": 24.5, "HY 019": 33.5, "HY 020-1": 24.5, "LC LB 03": 27.5, "HY 020-3": 44.5, "LC PW33": 23.5, "HY 020-5": 46.5, "HY 021-1": 50.5, "HY 022-1": 36.5, "LC W15": 39.5, "HY 026-1": 34.5, "HY 027": 22.5, "LC W72-3": 25.5, "HY 028-4": 24.5, "HY 029-1": 44.5, "HY 030-3": 49.5, "HY 031-4": 45.5, "HY 032": 37.5, "HY 032-1": 41.5, "HY 033": 29.5, "HY 035": 26.5, "HY 037-1": 32.5, "HY 038-1": 20.5, "HY 038-2": 20.5, "HY 039-1": 22.5, "HY 040-1": 25.5, "HY 040-2": 25.5, "HY 040-3": 27.5, "HY 040-4": 28.5, "HY 040-6": 30.5, "HY 042": 23.5, "HY 045": 25.5, "HY 046-1": 23.5, "HY 047-1": 36.5, "HY 047-2": 36.5, "HY 047-3": 41.5, "HY 048-1": 39.5, "HY 048-2": 39.5, "HY 049": 44.5, "HY 049-1": 36.5, "HY 055-4": 29.5, "HY 055-5": 29.5, "HY 055-6": 32.5, "HY 055-7": 32.5, "HY 056": 29.5, "HY 058-1": 39.5, "HY 060": 37.5, "HY 060-3": 42.5, "HY 060-1": 39.5, "HY 061-1": 44.5, "HY 062": 34.5, "HY 066": 32.5, "HY 066-1": 36.5, "HY 066-2": 39.5, "HY 067-3": 25.5, "HY 068": 28.5, "HY 076": 28.5, "HY 077": 27.5, "LC LA 08": 32.5, "LC A-2402": 30.5, "LC A-2402D": 39.5, "LC A-2403": 23.5, "LC AM14-1": 28.5, "LC B-2426-1": 23.5, "LC B-2426": 23.5, "LC C-02-1": 22.5, "LC C-02": 22.5, "LC C-09D": 38.5, "LC C-09": 38.5, "LC C-55-1": 25.5, "LC C-55": 25.5, "LC D-08-1": 23.5, "LC D-08": 23.5, "LC D-55-1": 24.5, "LC D-55": 24.5, "LC M14-2": 31.5, "LC M-15D": 46.5, "LC M-75": 27.5, "LC M-76": 28.5, "LC M-99-1": 38.5, "LC W-801": 28.5, "LC W-99-1": 39.5, "LC W-99": 40.5, "G 008B": 25.5, "G 148": 31.5, "RS 101": 25.5, "RS 102": 23.1, "RS 103": 31.5, "RS 105": 37.5, "RS 106": 19.5, "RS 107": 35.7, "RS 108": 41.5, "RS 109": 30.3, "RS 110": 33.9, "RS 111": 31.5, "RS 112": 25.5, "RS 113": 25.5, "RS 115": 25.5, "LC 01": 25.5, "RS 118": 31.5, "RS 119": 19.5, "RS 121": 23.5, "RS 123": 24.5, "RS 125": 25.5, "LC W-06": 22.5, "RS 133": 25.5, "RS 202": 25.5, "RS A1": 22.5, "RS A2": 30.3, "RS A2-1": 28.5, "RS A3": 35.1, "LC B2404": 25.5, "RS A7": 28.5, "RS A8": 20.7, "RS A9": 25.5, "RS A10": 30.5, "LO 020": 20.5, "LO 078-5": 29.5, "LO 043": 25.5, "SM 99-1": 34.5, "SM 99-3": 34.5, "SM 99-4": 34.5, "SM 99-5": 34.5, "SM 99-8": 34.5, "M-15": 40.5, "LO 024": 25.5, "LC B-2426-1": 23.5, "LC M99": 40.5, "W-99-2": 28.5, "W 15": 39.5, "LC W99-1": 39.5
         };
@@ -522,51 +522,93 @@
         window.updateCostsFromImage = function() {
             let updatedCount = 0;
             const newDb = db.map(prod => {
-                let key = Object.keys(COSTS_DB).find(k => prod.c.trim().toUpperCase() === k.trim().toUpperCase());
-                if (key) { prod.cost = COSTS_DB[key]; updatedCount++; } 
-                else { if (prod.cost === undefined) prod.cost = 0; }
+                let key = Object.keys(COSTS_DB).find(k => k.trim().toUpperCase() === prod.c.trim().toUpperCase());
+                if (key) { prod.cost = COSTS_DB[key]; updatedCount++; }
+                else if (prod.cost === undefined) { prod.cost = 0; }
                 return prod;
             });
-            dbRef.ref('inventory').set(newDb).then(() => { Toast.show(`✅ ${updatedCount} costos sincronizados`); renderAccounts(); });
+            dbRef.ref('inventory').set(newDb).then(() => { Toast.show(`Actualizados ${updatedCount} productos`, "success"); renderAccounts(); });
         };
 
-        // --- GUARDADO ---
         window.saveProduct = function() {
             const id = document.getElementById('prodId').value;
             const obj = {
-                c: document.getElementById('pCode').value, m: document.getElementById('pModel').value,
-                cat: document.getElementById('pCat').value, d: parseFloat(document.getElementById('pPrice').value)||0,
-                cost: parseFloat(document.getElementById('pCost').value)||0, 
-                p_unit: parseFloat(document.getElementById('pPriceUnit').value)||0,
-                stock: parseInt(document.getElementById('pStock').value)||0, t: document.getElementById('pSize').value,
+                c: document.getElementById('pCode').value,
+                m: document.getElementById('pModel').value,
+                cat: document.getElementById('pCat').value,
+                d: parseFloat(document.getElementById('pPrice').value) || 0,
+                cost: parseFloat(document.getElementById('pCost').value) || 0,
+                stock: parseFloat(document.getElementById('pStock').value) || 0,
+                t: document.getElementById('pSize').value,
                 img: document.getElementById('prodImgBase64').value
             };
-            let newDb = [...db]; if (id) { const i = newDb.findIndex(x => x.id == id); if (i !== -1) newDb[i] = { ...newDb[i], ...obj }; } else { newDb.unshift({ ...obj, id: Date.now() }); }
+            let newDb = [...db]; 
+            if (id) { const i = newDb.findIndex(x => x.id == id); if (i !== -1) newDb[i] = { ...newDb[i], ...obj }; } 
+            else { newDb.unshift({ ...obj, id: Date.now() }); }
             dbRef.ref('inventory').set(newDb).then(() => { closeModal('modalProd'); Toast.show("Guardado"); });
         }
 
-        // --- CUENTAS ---
-        window.renderAccounts = function() {
-            const tBody = document.getElementById('accountsBody'); if(!tBody) return;
-            let tc = 0, ts = 0, tp = 0, trp = 0; const cur = config.currency;
-            tBody.innerHTML = db.map(p => {
-                let c = p.cost || 0, s = p.d || 0, pf = s - c, st = p.stock || 0, stDz = st/12;
-                tc += stDz*c; ts += stDz*s; tp += stDz*pf;
-                return `<tr style="border-bottom:1px solid #eee;"><td><b>${p.c}</b></td><td>${cur}${c}</td><td>${cur}${s}</td><td style="color:${pf>0?'green':'red'}">${cur}${pf.toFixed(2)}</td><td align="center">${st}</td><td>${cur}${(stDz*pf).toFixed(2)}</td></tr>`;
-            }).join('');
-            history.forEach(h => { if(h.items) h.items.forEach(i => { let p = db.find(x => x.id == i.pId); let uc = p?p.cost:0; trp += i.total - (i.deduct*uc); }); });
-            document.getElementById('kpi-cost').innerText = cur + tc.toFixed(2); document.getElementById('kpi-sale').innerText = cur + ts.toFixed(2);
-            document.getElementById('kpi-profit').innerText = cur + tp.toFixed(2); document.getElementById('kpi-realized').innerText = cur + trp.toFixed(2);
+        // --- CÁLCULOS MATEMÁTICOS DE CUENTAS ---
+        function renderAccounts() {
+            if(!document.getElementById('view-accounts').classList.contains('active')) return;
+
+            let totalInvCost = 0, totalInvSale = 0, totalPotentialProfit = 0, currency = config.currency;
+            let html = "";
+            
+            db.forEach(p => {
+                let cost = p.cost || 0; 
+                let sale = p.d || 0;    
+                let profit = sale - cost; 
+                let currentStock = parseFloat(p.stock) || 0; // Float para exactitud decimal
+
+                totalInvCost += (cost * currentStock);
+                totalInvSale += (sale * currentStock);
+                totalPotentialProfit += (profit * currentStock);
+
+                html += `<tr style="border-bottom:1px solid #eee;">
+                    <td><b>${p.c}</b><br><small style="color:#777">${p.m}</small></td>
+                    <td style="color:#d32f2f;">${currency}${cost.toFixed(2)}</td>
+                    <td style="color:#1976D2;">${currency}${sale.toFixed(2)}</td>
+                    <td style="color:#388E3C; font-weight:bold;">${currency}${profit.toFixed(2)}</td>
+                    <td style="text-align:center; font-weight:bold;">${parseFloat(currentStock).toFixed(2).replace('.00','')}</td>
+                    <td style="color:#555;">${currency}${(cost * currentStock).toFixed(2)}</td>
+                </tr>`;
+            });
+
+            document.getElementById('accountsBody').innerHTML = html;
+
+            // Histórico Real
+            let realizedProfit = 0;
+            history.forEach(sale => {
+                sale.items.forEach(item => {
+                    let prodRef = db.find(x => x.id === item.pId || x.c === item.c);
+                    let unitCost = prodRef ? (prodRef.cost || 0) : 0;
+                    // Deduct es en Paquetes. unitCost es por Paquete.
+                    let gain = item.total - (parseFloat(item.deduct) * unitCost);
+                    realizedProfit += gain;
+                });
+            });
+
+            document.getElementById('kpi-cost').innerText = currency + totalInvCost.toFixed(2);
+            document.getElementById('kpi-sale').innerText = currency + totalInvSale.toFixed(2);
+            document.getElementById('kpi-profit').innerText = currency + totalPotentialProfit.toFixed(2);
+            document.getElementById('kpi-realized').innerText = currency + realizedProfit.toFixed(2);
         }
 
         window.processSale = function() {
-            if(cart.length===0) return alert("Vacio");
-            const nm=document.getElementById('cartClientName').value.trim(); if(!nm) return alert("Falta nombre cliente");
+            if(cart.length===0) return alert("Carrito Vacío");
+            const nm=document.getElementById('cartClientName').value.trim(); if(!nm) return alert("Falta Cliente");
             let tot=0, desc="", snap=JSON.parse(JSON.stringify(cart));
-            cart.forEach(i=>{ tot+=i.total; desc+=`${i.qtyTxt} ${i.c}, `; const p=db.find(x=>x.id==i.pId); if(p) p.stock-=i.deduct; });
+            cart.forEach(i=>{
+                tot+=i.total; desc+=`${i.qtyTxt} ${i.c}, `;
+                const p=db.find(x=>x.id==i.pId); if(p) p.stock = parseFloat(p.stock) - parseFloat(i.deduct);
+            });
             dbRef.ref('inventory').set(db); 
             const rec={id:Date.now(), date:new Date().toLocaleString(), client:nm, phone:document.getElementById('cartClientPhone').value, total:tot, items:snap, desc:desc};
-            dbRef.ref('history').push(rec); printFromData(rec); cart=[]; document.getElementById('cartClientName').value=""; renderCart(); toggleCart();
+            dbRef.ref('history').push(rec); 
+            printFromData(rec);
+            cart=[]; document.getElementById('cartClientName').value=""; document.getElementById('cartClientPhone').value="";
+            renderCart(); toggleCart();
         }
 
         window.saveConfig = function() {
@@ -575,88 +617,67 @@
             config.footer = document.getElementById('cfgFooter').value; config.color = document.getElementById('cfgColor').value;
             config.banner = document.getElementById('cfgBanner').value; config.maintenance = document.getElementById('cfgMaintenance').checked;
             const l=document.getElementById('cfgLogoData').value; if(l) config.logo=l;
-            dbRef.ref('config').set(config).then(()=>Toast.show("Ajustes OK"));
+            dbRef.ref('config').set(config).then(()=>Toast.show("Ajustes sincronizados"));
         }
         
-       function saveInitialData(){
-            // TODOS LOS DATOS EXTRAIDOS DEL PDF COMPLETO
-            const initialData = [
-                // DAMA
-                {c:"W 15",m:"Croc Clasico Baby",d:46,t:"36-40",cat:"Dama"},{c:"LC W72-3",m:"Croc Decorado",d:32,t:"35-40",cat:"Dama"},{c:"LC W99-1",m:"Sandalia Fashion",d:48,t:"36-40",cat:"Dama"},
-                {c:"LC W-801",m:"Plataforma Barbie",d:35,t:"36-40",cat:"Dama"},{c:"LC M14-2",m:"Chancla Gatito/Vaca",d:38,t:"36-40",cat:"Dama"},{c:"HY 047-1",m:"Croc Bicolor 1",d:42,t:"36-40",cat:"Dama"},
-                {c:"HY 047-2",m:"Croc Bicolor 2",d:42,t:"36-40",cat:"Dama"},{c:"HY 047-3",m:"Croc con Peluche",d:47,t:"36-40",cat:"Dama"},{c:"HY 040-1",m:"Croc Kuromi",d:32,t:"36-40",cat:"Dama"},
-                {c:"HY 040-3",m:"Croc Accesorios",d:33,t:"36-40",cat:"Dama"},{c:"HY 040-4",m:"Croc Cadena Oro",d:34,t:"36-40",cat:"Dama"},{c:"HY 040-6",m:"Croc Perla/Oso",d:36,t:"36-40",cat:"Dama"},
-                {c:"HY 077",m:"Croc Hong Yuan Flores",d:34,t:"36-40",cat:"Dama"},{c:"RS 111",m:"Croc Cadena Negro",d:43,t:"36-41",cat:"Dama"},{c:"RS 110",m:"Croc Grueso Fashion",d:50,t:"36-41",cat:"Dama"},
-                {c:"RS 109",m:"Croc Geométrico",d:39,t:"36-41",cat:"Dama"},{c:"RS 112",m:"Croc Plataforma Alta",d:31,t:"36-41",cat:"Dama"},{c:"RS 107",m:"Sueco Cerrado Liso",d:44,t:"36-41",cat:"Dama"},
-                {c:"RS 202",m:"Sueco Hebilla",d:35,t:"36-41",cat:"Dama"},{c:"HY 056",m:"Croc Puntera Love",d:35,t:"36-40",cat:"Dama"},{c:"RS 123",m:"Chancla Nike Style",d:35,t:"36-41",cat:"Dama"},
-                {c:"HY 032",m:"Plataforma Arrugada",d:43,t:"36-40",cat:"Dama"},{c:"HY 032-1",m:"Plataforma Lazo",d:47,t:"36-40",cat:"Dama"},{c:"HY 011-2",m:"Plataforma Textura",d:41,t:"36-40",cat:"Dama"},
-                {c:"RS A9",m:"Yeezy Style Slide",d:34,t:"36-41",cat:"Dama"},{c:"HY 006-1",m:"Chancla Cadena Strass",d:42,t:"36-40",cat:"Dama"},{c:"LB - 03",m:"Sandalia Doble Tira",d:35,t:"36-40",cat:"Dama"},
-                {c:"HY 006-2",m:"Chancla Cadena Oso",d:42,t:"36-40",cat:"Dama"},{c:"HY 011-1",m:"Plataforma Flor",d:47,t:"36-40",cat:"Dama"},{c:"HY 002-1",m:"Chancla Vaca (Forro)",d:36,t:"36-40",cat:"Dama"},
-                {c:"HY 002-3",m:"Chancla Estampada",d:40,t:"36-40",cat:"Dama"},{c:"HY 001",m:"Chancla Nube Lisa",d:41,t:"36-40",cat:"Dama"},{c:"LC W99",m:"Chancla Brillo",d:48,t:"36-40",cat:"Dama"},
-                {c:"RS A2",m:"Yeezy Estampado",d:36,t:"36-41",cat:"Dama"},{c:"RS A2-1",m:"Chancla Lazo Minnie",d:34,t:"36-41",cat:"Dama"},{c:"LC B-2426-1",m:"Sandalia Dedo Lisa Pastel",d:30,t:"36-40",cat:"Dama"},
-                {c:"HY 028-4",m:"Hawaiana Flores",d:30,t:"36-40",cat:"Dama"},{c:"PW 33-1",m:"Hawaiana Transparente",d:30,t:"36-41",cat:"Dama"},{c:"HY 022",m:"Chancla Cruzada Acolchada",d:42,t:"36-40",cat:"Dama"},
-                {c:"HY 058-1",m:"Sandalia Doble Lazo",d:45,t:"36-40",cat:"Dama"},{c:"HY 029",m:"Sandalia Sport Ajustable",d:56,t:"36-40",cat:"Dama"},
-                {c:"W-06",m:"Hawaiana Dedo Caballero",d:28,t:"36-40",cat:"Dama"},{c:"LC B-2426",m:"Sandalia Dedo Oscura",d:30,t:"36-40",cat:"Dama"},{c:"HY 060",m:"Croc Bicolor Casual",d:44,t:"36-40",cat:"Dama"},
-                {c:"W-99-2",m:"Chancla Franjas",d:36,t:"36-40",cat:"Dama"},
-                // CABALLERO
-                {c:"LC M-15D",m:"Croc Camuflaje",d:52,t:"40-45",cat:"Caballero"},{c:"M-15",m:"Croc Linea Amarilla",d:50,t:"40-45",cat:"Caballero"},{c:"LA-08",m:"Chancla Adidas Logo",d:38,t:"40-45",cat:"Caballero"},
-                {c:"SM 99-3",m:"Chancla Banda Ancha",d:45,t:"40-45",cat:"Caballero"},{c:"LC M-76",m:"Croc 'M' Hebilla",d:35,t:"40-45",cat:"Caballero"},{c:"LC M-75",m:"Croc 'M' Liso",d:34,t:"40-45",cat:"Caballero"},
-                {c:"M-60",m:"Chancla Logo Lateral",d:38,t:"40-45",cat:"Caballero"},{c:"LC M-99-1",m:"Sandalia Tiras",d:48,t:"40-45",cat:"Caballero"},{c:"SM 99-8",m:"Chancla Banda Logo",d:45,t:"40-45",cat:"Caballero"},
-                {c:"SM 99-5",m:"Chancla 'Sport'",d:45,t:"40-45",cat:"Caballero"},{c:"SM 99-4",m:"Chancla 'Just Do It'",d:45,t:"40-45",cat:"Caballero"},{c:"M99-2",m:"Chancla 3 Franjas",d:38,t:"40-45",cat:"Caballero"},
-                {c:"RS 108",m:"Sueco Cerrado Sport",d:51,t:"40-45",cat:"Caballero"},{c:"HY 060-1",m:"Croc Salpicado",d:45,t:"36-40",cat:"Caballero"},{c:"HY 076",m:"Croc Todo Terreno",d:34,t:"40-45",cat:"Caballero"},
-                {c:"HY 045",m:"Croc Clásico Liso",d:31,t:"40-45",cat:"Caballero"},{c:"RS A3",m:"Yeezy Logo Color",d:41,t:"40-45",cat:"Caballero"},{c:"HY 016",m:"Yeezy Slide Lisa",d:36,t:"40-45",cat:"Caballero"},
-                {c:"HY 049-1",m:"Sandalia 'Sport' Letras",d:48,t:"40-45",cat:"Caballero"},{c:"LC A-2402",m:"Yeezy Estampado Tropical",d:36,t:"40-45",cat:"Caballero"},{c:"HY 016-1",m:"Yeezy Slide Camuflaje",d:46,t:"40-45",cat:"Caballero"},
-                {c:"HY 037",m:"Sandalia Slide Malla",d:38,t:"40-45",cat:"Caballero"},{c:"HY 010",m:"Yeezy Texture",d:36,t:"40-45",cat:"Caballero"},{c:"LC AM14-1",m:"Yeezy Malla Fina",d:34,t:"40-45",cat:"Caballero"},
-                {c:"HY 033",m:"Sandalia Doble Hebilla Goma",d:35,t:"40-45",cat:"Caballero"},{c:"LC A-2403",m:"Yeezy Slide Textura",d:29,t:"40-45",cat:"Caballero"},{c:"LC A-2402D",m:"Yeezy Selva",d:45,t:"40-45",cat:"Caballero"},
-                {c:"LC M99",m:"Chancla Numero 23",d:50,t:"40-45",cat:"Caballero"},{c:"HY 007",m:"Sandalia Cuadros",d:30,t:"40-45",cat:"Caballero"},{c:"HY 049",m:"Sandalia Ajuste Lateral",d:50,t:"40-45",cat:"Caballero"},
-                {c:"RS 101",m:"Chancla Basket/Jordan",d:34,t:"40-45",cat:"Caballero"},{c:"HY 042",m:"Sandalia Dedo Sport",d:30,t:"40-45",cat:"Caballero"},{c:"HY 027",m:"Hawaiana Simple",d:30,t:"40-45",cat:"Caballero"},
-                {c:"HY 031-4",m:"Sandalia Franciscana",d:56,t:"40-45",cat:"Caballero"},
-                // NIÑO / NIÑA
-                {c:"LC C-09D",m:"Croc Infantil 3D",d:44,t:"30-35",cat:"Niño/Niña"},{c:"LC C-02-1",m:"Croc Pastel Dibujos",d:32,t:"30-35",cat:"Niño/Niña"},{c:"LC D-55-1",m:"Sandalia Banda Dibujos",d:32,t:"24-29",cat:"Niño/Niña"},
-                {c:"LC C-55-1",m:"Chancla Banda Ancha Kids",d:33,t:"30-35",cat:"Niño/Niña"},{c:"LC C-07-1",m:"Croc Animalitos",d:30,t:"30-35",cat:"Niño/Niña"},{c:"LC C-04",m:"Croc Textura Cesta",d:33,t:"30-35",cat:"Niño/Niña"},
-                {c:"LC 05",m:"Chancla Nike Kids",d:32,t:"30-35",cat:"Niño/Niña"},{c:"RS 106",m:"Croc Mickey",d:35,t:"25-30",cat:"Niño/Niña"},{c:"RS 133",m:"Croc Kuromi/Cereza",d:31,t:"30-35",cat:"Niño/Niña"},
-                {c:"HY 038-1",m:"Croc Pequeños Dibujos",d:27,t:"24-29",cat:"Niño/Niña"},{c:"HY 039-1",m:"Croc Niña Muñeca",d:29,t:"30-35",cat:"Niño/Niña"},{c:"RS 119",m:"Croc Ondulado Hello Kitty",d:27,t:"25-30",cat:"Niño/Niña"},
-                {c:"RS 113",m:"Croc Perlas/Flores",d:33,t:"30-35",cat:"Niño/Niña"},{c:"HY 009-1",m:"Croc Bebidas/Frutas",d:33,t:"30-35",cat:"Niño/Niña"},{c:"HY 017-1",m:"Croc Bebe Flor/Estrella",d:27,t:"19-24",cat:"Niño/Niña"},
-                {c:"HY 018-1",m:"Croc Forma Auto",d:30,t:"24-29",cat:"Niño/Niña"},{c:"HY 003-1",m:"Chancla Vaquita Niños",d:32,t:"30-35",cat:"Niño/Niña"},{c:"LC D-08-1",m:"Hawaiana Bebe Animales",d:29,t:"24-29",cat:"Niño/Niña"},
-                {c:"LO 024",m:"Chancla Bob Esponja",d:33,t:"30-35",cat:"Niño/Niña"},{c:"RS A1",m:"Yeezy Kids Liso",d:28,t:"30-35",cat:"Niño/Niña"},{c:"LO 020",m:"Chancla Hello Kitty",d:26,t:"30-35",cat:"Niño/Niña"},
-                {c:"HY 055-4",m:"Bota Lluvia Moño",d:36,t:"24-29",cat:"Niño/Niña"},{c:"HY 055-7",m:"Bota Lluvia Gato",d:40,t:"30-35",cat:"Niño/Niña"},{c:"HY 019",m:"Sandalia Vaquita Tela",d:39,t:"18-23",cat:"Niño/Niña"},
-                {c:"HY 013-1",m:"Sandalia Bebe Tiras",d:27,t:"19-24",cat:"Niño/Niña"},{c:"HY 020-3",m:"Sandalia Sport Niña",d:50,t:"24-29",cat:"Niño/Niña"},{c:"HY 015-1",m:"Sandalia Hebilla Bebe",d:29,t:"25-30",cat:"Niño/Niña"},
-                {c:"HY 030-3",m:"Sandalia Sport Print",d:55,t:"30-35",cat:"Niño/Niña"},{c:"HY 020-1",m:"Sandalia Sport Clasica",d:31,t:"24-29",cat:"Niño/Niña"},{c:"HY 026",m:"Sandalia Ositos",d:40,t:"30-35",cat:"Niño/Niña"},
-                {c:"LO 078-5",m:"Sandalia Mariposa/Cadena",d:35,t:"24-29",cat:"Niño/Niña"},
-                {c:"LC 01",m:"Croc Mario/Juegos",d:31,t:"30-35",cat:"Niño/Niña"},{c:"C-07",m:"Croc Dinosaurio",d:29,t:"30-35",cat:"Niño/Niña"},{c:"LC C-09",m:"Croc Raya Lateral",d:44,t:"24-29",cat:"Niño/Niña"},
-                {c:"LC C-02",m:"Croc Personaje Urbano",d:32,t:"30-35",cat:"Niño/Niña"},{c:"LC D-08",m:"Hawaiana Niño",d:29,t:"24-29",cat:"Niño/Niña"},{c:"HY 017-2",m:"Croc Bebe Espacio",d:27,t:"19-24",cat:"Niño/Niña"},
-                {c:"HY 018-2",m:"Croc Auto Gris/Azul",d:30,t:"24-29",cat:"Niño/Niña"},{c:"HY 038-2",m:"Croc Niño Dinosaurio",d:27,t:"24-29",cat:"Niño/Niña"},{c:"HY 009-2",m:"Croc Niño Oscuro",d:33,t:"30-35",cat:"Niño/Niña"},
-                {c:"LO 043",m:"Chancla Ciudad",d:31,t:"24-29",cat:"Niño/Niña"},{c:"G 008B",m:"Chancla Oso Militar",d:31,t:"30-35",cat:"Niño/Niña"},{c:"LC D-55",m:"Sandalia Niño 3D",d:32,t:"24-29",cat:"Niño/Niña"},
-                {c:"LC C-55",m:"Chancla Niño Dinosaurio/Pizza",d:33,t:"30-35",cat:"Niño/Niña"},{c:"HY 055-5",m:"Bota Lluvia Dino",d:36,t:"24-29",cat:"Niño/Niña"},{c:"HY 055-6",m:"Bota Lluvia Lobo",d:40,t:"30-35",cat:"Niño/Niña"},
-                {c:"HY 013",m:"Sandalia Tiras Oscuras",d:27,t:"19-24",cat:"Niño/Niña"},{c:"HY 015",m:"Sandalia Hebilla Oscura",d:29,t:"25-30",cat:"Niño/Niña"},{c:"HY 020-5",m:"Sandalia Sport Oscura",d:52,t:"24-29",cat:"Niño/Niña"},
-                {c:"HY 030-4",m:"Sandalia Sport Gris",d:55,t:"30-35",cat:"Niño/Niña"},{c:"HY 030-5",m:"Sandalia Sport Azul",d:55,t:"30-35",cat:"Niño/Niña"}
-            ];
-            
-            // Asigna los ID únicos y costo base 0 si no existe
-            const dbWithIDs = initialData.map((p,i)=>({...p, id:Date.now()+i, stock:72, cost:0}));
-            
-            // Guardar en la Nube
-            dbRef.ref('inventory').set(dbWithIDs).then(() => {
-                Toast.show("¡Base de Datos Maestra Restaurada!", "success");
-            });
+        window.openEdit=(id)=>{ 
+            const p=db.find(x=>x.id==id);
+            document.getElementById('prodId').value=p.id; 
+            document.getElementById('pCode').value=p.c; document.getElementById('pModel').value=p.m;
+            document.getElementById('pPrice').value=p.d; document.getElementById('pCost').value=p.cost || "";
+            document.getElementById('pStock').value=p.stock; document.getElementById('pCat').value=p.cat; 
+            document.getElementById('pSize').value=p.t || "Unica"; document.getElementById('prodImgBase64').value=p.img||""; 
+            const pv = document.getElementById('imgPreview');
+            if(p.img){pv.src=p.img; pv.style.display='block'; document.getElementById('dropZone').classList.add('has-img')}
+            else{pv.style.display='none'; document.getElementById('dropZone').classList.remove('has-img')}
+            document.getElementById('modalProd').style.display='flex'; 
         }
+
+        window.openModalProd=()=>{ 
+            ['pCode','pModel','pPrice','pStock','prodImgBase64','pCost','pSize'].forEach(k=>document.getElementById(k).value=""); 
+            document.getElementById('dropZone').classList.remove('has-img'); document.getElementById('imgPreview').style.display='none';
+            document.getElementById('modalProd').style.display='flex'; 
+        }
+
+        // CARGA DB ORIGINAL DE PDF (Backup)
+        function saveInitialData(){
+            const initialData = [
+                {c:"W 15",m:"Croc Clasico Baby",d:46,t:"36-40",cat:"Dama"},{c:"LC W72-3",m:"Croc Decorado",d:32,t:"35-40",cat:"Dama"},{c:"LC W99-1",m:"Sandalia Fashion",d:48,t:"36-40",cat:"Dama"},{c:"LC W-801",m:"Plataforma Barbie",d:35,t:"36-40",cat:"Dama"},{c:"LC M14-2",m:"Chancla Gatito/Vaca",d:38,t:"36-40",cat:"Dama"},{c:"HY 047-1",m:"Croc Bicolor 1",d:42,t:"36-40",cat:"Dama"},{c:"HY 047-2",m:"Croc Bicolor 2",d:42,t:"36-40",cat:"Dama"},{c:"HY 047-3",m:"Croc con Peluche",d:47,t:"36-40",cat:"Dama"},{c:"HY 040-1",m:"Croc Kuromi",d:32,t:"36-40",cat:"Dama"},{c:"LC M-15D",m:"Croc Camuflaje",d:52,t:"40-45",cat:"Caballero"},{c:"M-15",m:"Croc Linea Amarilla",d:50,t:"40-45",cat:"Caballero"},{c:"LA-08",m:"Chancla Adidas Logo",d:38,t:"40-45",cat:"Caballero"},{c:"LC C-09D",m:"Croc Infantil 3D",d:44,t:"30-35",cat:"Niño/Niña"},{c:"LC C-02-1",m:"Croc Pastel Dibujos",d:32,t:"30-35",cat:"Niño/Niña"},{c:"LC D-55-1",m:"Sandalia Banda Dibujos",d:32,t:"24-29",cat:"Niño/Niña"},{c:"HY 006-2",m:"Chancla Cadena Oso",d:42,t:"36-40",cat:"Dama"}, {c:"RS 123",m:"Chancla Nike Style",d:35,t:"36-41",cat:"Dama"},{c:"RS 113",m:"Croc Perlas/Flores",d:33,t:"30-35",cat:"Niño/Niña"}
+            ];
+            const dbWithIDs = initialData.map((p,i)=>({...p, id:Date.now()+i, stock:72, cost:0}));
+            dbRef.ref('inventory').set(dbWithIDs);
+        }
+        window.reloadInitialData=function(){if(confirm("¿Seguro de Restaurar DB Original PDF?")){ saveInitialData(); }}
 
         function applyConfig(){
             document.documentElement.style.setProperty('--primary',config.color);
-            document.getElementById('brandName').innerText=config.name; document.getElementById('brandSub').innerText=config.sub; document.getElementById('mobileTitleTxt').innerText=config.name.toUpperCase();
-            document.getElementById('cfgName').value=config.name; document.getElementById('cfgSub').value=config.sub; document.getElementById('cfgTel').value=config.tel; document.getElementById('cfgCurrency').value=config.currency; document.getElementById('cfgFooter').value=config.footer; document.getElementById('cfgColor').value=config.color; document.getElementById('cfgBanner').value=config.banner||""; document.getElementById('cfgMaintenance').checked=config.maintenance||false;
+            document.getElementById('brandName').innerText=config.name; document.getElementById('brandSub').innerText=config.sub;
+            document.getElementById('brandSubSidebar').innerText=config.sub;
+            document.getElementById('mobileTitleTxt').innerText=config.name.toUpperCase();
+            
+            document.getElementById('cfgName').value=config.name; document.getElementById('cfgSub').value=config.sub;
+            document.getElementById('cfgTel').value=config.tel; document.getElementById('cfgCurrency').value=config.currency;
+            document.getElementById('cfgFooter').value=config.footer; document.getElementById('cfgColor').value=config.color;
+            document.getElementById('cfgBanner').value=config.banner||""; document.getElementById('cfgMaintenance').checked=config.maintenance||false;
             const b = document.getElementById('globalBanner'); if(config.banner){b.innerText=config.banner; b.style.display='block';}else{b.style.display='none';}
+            
             if(config.logo){
-                ['displayLogoSidebar','mobileLogoImg','printLogoDisplay','cfgLogoPreview'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.src=config.logo; if(id!=='cfgLogoPreview') el.style.display='block'; } });
+                ['displayLogoSidebar','mobileLogoImg','printLogoDisplay','cfgLogoPreview'].forEach(id=>{
+                    const el=document.getElementById(id); if(el){ el.src=config.logo; if(id!=='cfgLogoPreview') el.style.display='block'; }
+                });
                 document.getElementById('cfgLogoData').value=config.logo;
+            } else {
+               document.getElementById('displayLogoSidebar').style.display='none'; 
             }
         }
         
         window.nav=(v,e)=>{ 
-            document.querySelectorAll('.view-panel').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); 
+            document.querySelectorAll('.view-panel').forEach(x=>x.classList.remove('active')); 
+            document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); 
             document.getElementById('view-'+v).classList.add('active'); e.classList.add('active'); 
-            if(v==='pos') renderPOS(); if(v==='accounts') renderAccounts();
-            if(window.innerWidth<=768) document.getElementById('mobileTitleTxt').innerText = {pos:"CATÁLOGO", history:"VENTAS", inv:"STOCK", accounts:"CUENTAS", config:"AJUSTES"}[v];
+            
+            if(v==='pos') renderPOS(); 
+            if(v==='accounts') renderAccounts();
         }
 
         function renderPOS(){
@@ -664,10 +685,11 @@
             const g=document.getElementById('posGrid'); const txt=document.getElementById('searchInput').value.toLowerCase();
             g.innerHTML="";
             const list=db.filter(p=>(p.c.toLowerCase().includes(txt)||p.m.toLowerCase().includes(txt))&&(curFilter==='all'||p.cat===curFilter));
+            if(list.length==0) g.innerHTML="<p style='width:100%;text-align:center;color:#999'>No hay productos</p>";
             list.forEach(p=>{
                 const bg=p.cat==='Dama'?'#E91E63':(p.cat==='Caballero'?'#546E7A':'#FF9800');
                 const img=p.img||`https://placehold.co/300x300/eee/333?text=${p.c}`;
-                g.innerHTML+=`<div class="card" onclick="openSale(${p.id})"><div class="card-img-wrap"><img src="${img}" loading="lazy"><span class="badge-cat" style="background:${bg}">${p.cat?p.cat.substring(0,3):'G'}</span></div><div class="card-content"><div><h4>${p.c}</h4><p>${p.m}</p></div><div class="card-footer"><span class="stock">${p.stock} p.</span><span class="price">${config.currency}${p.d}</span></div></div></div>`;
+                g.innerHTML+=`<div class="card" onclick="openSale(${p.id})"><div class="card-img-wrap"><img src="${img}" loading="lazy"><span class="badge-cat" style="background:${bg}">${p.cat.substring(0,3)}</span></div><div class="card-content"><div><h4>${p.c}</h4><p>${p.m} <small>(${p.t})</small></p></div><div class="card-footer"><span class="stock">${p.stock} P.</span><span class="price">${config.currency}${p.d}</span></div></div></div>`;
             });
         }
         window.filterCat=(c,el)=>{ curFilter=c; document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); el.classList.add('active'); renderPOS(); }
@@ -675,25 +697,55 @@
         
         window.openSale=function(id){ saleItem=db.find(x=>x.id==id); document.getElementById('saleTitle').innerText=saleItem.c; document.getElementById('saleId').value=id; document.getElementById('saleQty').value=1; window.setSaleType('doc'); document.getElementById('modalSale').style.display='flex'; }
         window.setSaleType=function(t){ saleMode=t; ['doc','half','unit'].forEach(x=>{document.getElementById('btn-'+x).style.background=x==t?config.color:'#eee';document.getElementById('btn-'+x).style.color=x==t?'white':'#333'}); updateCalc(); }
-        window.updateCalc=function(){ const q=parseInt(document.getElementById('saleQty').value)||1; const cur=config.currency; let p=0, txt=""; if(saleMode==='doc'){p=saleItem.d;txt=`${cur}${p}/pq`;}else if(saleMode==='half'){p=saleItem.d/2;txt=`${cur}${p.toFixed(2)}/med`;}else{p=saleItem.p_unit>0?saleItem.p_unit:(saleItem.d/12)*1.6;txt=`${cur}${p.toFixed(2)}/par`;} document.getElementById('unitPriceDisplay').innerText=txt; document.getElementById('saleTotalCalc').innerText=`${cur}${(p*q).toFixed(2)}`; }
+        
+        window.updateCalc=function(){ 
+            const q=parseInt(document.getElementById('saleQty').value)||1; const cur=config.currency; 
+            let p=0, txt=""; 
+            if(saleMode==='doc'){ p=saleItem.d; txt=`Precio Docena: ${cur}${p}`; } 
+            else if(saleMode==='half'){ p=saleItem.d/2; txt=`Precio Media Docena: ${cur}${p.toFixed(2)}`; }
+            else { p=saleItem.p_unit>0?saleItem.p_unit:(saleItem.d/12)*1.6; txt=`Precio Par (Unit): ${cur}${p.toFixed(2)}`; } 
+            document.getElementById('unitPriceDisplay').innerText=txt; 
+            document.getElementById('saleTotalCalc').innerText=`${cur}${(p*q).toFixed(2)}`; 
+        }
+        
         window.adjQty=(n)=>{ let v=parseInt(document.getElementById('saleQty').value)+n; if(v<1)v=1; document.getElementById('saleQty').value=v; updateCalc(); }
+        
         window.confirmAdd=function(){ 
             const q=parseInt(document.getElementById('saleQty').value); const t=parseFloat(document.getElementById('saleTotalCalc').innerText.replace(/[^0-9.]/g,''));
-            let l=saleMode==='doc'?'Doc':(saleMode==='half'?'Med':'Par'); let d=saleMode==='doc'?12*q:(saleMode==='half'?6*q:q); 
+            let l=saleMode==='doc'?'Doc':(saleMode==='half'?'Med':'Par'); 
+            // Deducción exacta: si se vende PAR, se descuenta 1/12 de paquete (0.0833)
+            let d = saleMode==='doc' ? q : (saleMode==='half' ? 0.5*q : q/12); 
             
-            cart.push({pId:saleItem.id,c:saleItem.c,m:saleItem.m,qtyTxt:`${q} ${l}`,total:t,deduct:d});
+            cart.push({pId:saleItem.id, c:saleItem.c, m:saleItem.m, qtyTxt:`${q} ${l}`, total:t, deduct:d});
             closeModal('modalSale'); renderCart(); toggleCart(); Toast.show("Añadido");
         }
+        
         function renderCart(){ const c=document.getElementById('cartContainer');c.innerHTML="";let t=0;if(cart.length==0)c.innerHTML="<p style='text-align:center;color:#999'>Vacío</p>"; cart.forEach((i,x)=>{t+=i.total;c.innerHTML+=`<div class="c-item"><div style="flex:1"><b>${i.c}</b> <small>${i.qtyTxt}</small></div><div style="text-align:right"><b>${config.currency}${i.total.toFixed(2)}</b><i class="fa-solid fa-trash" style="color:red;margin-left:8px" onclick="cart.splice(${x},1);renderCart()"></i></div></div>`});document.getElementById('cartTotalDisplay').innerText=`${config.currency}${t.toFixed(2)}`;document.getElementById('cartCountBadge').innerText=cart.length;}
         
-        function renderInv(){ const t=document.getElementById('invBody');t.innerHTML="";const c=config.currency; db.forEach(p=>{ const i=p.img||"https://placehold.co/50";t.innerHTML+=`<tr><td><img src="${i}" class="thumb"></td><td><b>${p.c}</b></td><td>${c}${p.d}</td><td>${p.stock}</td><td><i class="fa-solid fa-pen" onclick="openEdit(${p.id})"></i> <i class="fa-solid fa-trash" style="color:red" onclick="delProd(${p.id})"></i></td></tr>`});}
-        window.openEdit=(id)=>{ const p=db.find(x=>x.id==id); document.getElementById('prodId').value=p.id; document.getElementById('pCode').value=p.c; document.getElementById('pModel').value=p.m; document.getElementById('pPrice').value=p.d; document.getElementById('pCost').value=p.cost||""; document.getElementById('pStock').value=p.stock; document.getElementById('pCat').value=p.cat; document.getElementById('prodImgBase64').value=p.img||""; if(p.img){document.getElementById('imgPreview').src=p.img;document.getElementById('dropZone').classList.add('has-img')}else{document.getElementById('dropZone').classList.remove('has-img')} document.getElementById('modalProd').style.display='flex'; }
-        window.openModalProd=()=>{ ['pCode','pModel','pPrice','pStock','pCost','prodImgBase64'].forEach(k=>document.getElementById(k).value=""); document.getElementById('dropZone').classList.remove('has-img'); document.getElementById('modalProd').style.display='flex'; }
-        window.delProd=(id)=>{ if(confirm("?")) dbRef.ref('inventory').set(db.filter(x=>x.id!=id)); }
+        function renderInv(){ const t=document.getElementById('invBody');t.innerHTML="";const c=config.currency; db.forEach(p=>{ const i=p.img||"https://placehold.co/50?text=?";t.innerHTML+=`<tr><td><img src="${i}" class="thumb"></td><td><b>${p.c}</b><br>${p.cat.substring(0,3)}</td><td>${c}${p.d}</td><td>${parseFloat(p.stock).toFixed(1)}</td><td><i class="fa-solid fa-pen" onclick="openEdit(${p.id})"></i> <i class="fa-solid fa-trash" style="color:red" onclick="delProd(${p.id})"></i></td></tr>`});}
+        window.delProd=(id)=>{ if(confirm("¿Eliminar?")) dbRef.ref('inventory').set(db.filter(x=>x.id!=id)); }
         
-        function renderHistory(){ const t=document.getElementById('histBody');t.innerHTML="";let g=0;const c=config.currency; history.forEach(h=>{ g+=h.total; t.innerHTML+=`<tr><td><small>${h.date.split(' ')[0]}</small></td><td><b>${h.client}</b></td><td><button class="btn" style="padding:2px;font-size:0.6rem;background:#eee" onclick="alert('${h.desc}')">Ver</button></td><td>${c}${h.total}</td><td><i class="fa-solid fa-print" style="color:blue" onclick="reprint(${h.id})"></i> <i class="fa-solid fa-trash" style="color:red" onclick="delHist(${h.id})"></i></td></tr>`}); document.getElementById('grandTotalHistory').innerText=`${c}${g.toFixed(2)}`; }
-        window.delHist=(id)=>{ if(confirm("Devolver stock y borrar?")){ const h=history.find(x=>x.id==id); if(h){h.items.forEach(i=>{let px=db.findIndex(p=>p.id==i.pId);if(px>-1)db[px].stock=parseInt(db[px].stock)+parseInt(i.deduct)}); dbRef.ref('inventory').set(db); dbRef.ref('history').once('value').then(s=>{const d=s.val();for(let k in d)if(d[k].id==id)dbRef.ref('history/'+k).remove()})} } }
-        window.clearHistory=()=>{ if(confirm("BORRAR TODO?")) dbRef.ref('history').set(null); }
+        function renderHistory(){ const t=document.getElementById('histBody');t.innerHTML="";let g=0;const c=config.currency; history.forEach(h=>{ g+=h.total; t.innerHTML+=`<tr><td><small>${h.date.split(',')[0]}</small></td><td><b>${h.client}</b></td><td><button class="btn" style="padding:2px 8px;font-size:0.7rem;background:#eee" onclick="alert('${h.desc}')">Ver</button></td><td>${c}${h.total}</td><td><i class="fa-solid fa-print" style="color:blue" onclick="reprint(${h.id})"></i> <i class="fa-solid fa-trash" style="color:red" onclick="delHist(${h.id})"></i></td></tr>`}); document.getElementById('grandTotalHistory').innerText=`${c}${g.toFixed(2)}`; }
+        
+        // BORRAR HISTORIAL Y DEVOLVER STOCK DECIMAL
+        window.delHist=(id)=>{ if(confirm("⚠️ ¿ANULAR VENTA? El stock volverá a sumarse.")){ 
+            const h = history.find(x=>x.id==id);
+            if(h) {
+                // Restore Stock
+                let tempDb = [...db];
+                h.items.forEach(i=>{
+                    let pIdx = tempDb.findIndex(p=>p.id == i.pId);
+                    if(pIdx > -1) {
+                        tempDb[pIdx].stock = parseFloat(tempDb[pIdx].stock) + parseFloat(i.deduct);
+                    }
+                });
+                dbRef.ref('inventory').set(tempDb);
+                
+                dbRef.ref('history').once('value').then(s=>{const d=s.val();for(let k in d)if(d[k].id==id)dbRef.ref('history/'+k).remove()});
+                Toast.show("Venta Anulada");
+            }
+        }}
+        window.clearHistory=()=>{ if(confirm("⚠️ BORRAR TODO?")) dbRef.ref('history').set(null); }
         window.reprint=(id)=>{const h=history.find(x=>x.id==id);if(h)printFromData(h,true);}
         
         function printFromData(rec,cp=false){
@@ -715,4 +767,3 @@
     </script>
 </body>
 </html>
-
