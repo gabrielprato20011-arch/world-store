@@ -669,23 +669,30 @@
             updateCalc(); 
         }
         
-        window.updateCalc=function(){ 
-            const q=parseInt(document.getElementById('saleQty').value)||1; 
-            const cur=config.currency; 
-            let p=0, txt=""; 
-            
-            if(saleMode==='doc'){ 
-                p=saleItem.d; 
-                txt=`Precio Docena: ${cur}${p}`; 
-            } else if(saleMode==='half'){ 
-                p=saleItem.d/2; 
-                txt=`Precio Media Docena: ${cur}${p.toFixed(2)}`; 
-            } else { 
-                // Precio Par Automático (aprox +% sobre docena si no está definido)
-                p = saleItem.p_unit > 0 ? saleItem.p_unit : (saleItem.d/12)*1.6; 
-                txt=`Precio Unitario (Par): ${cur}${p.toFixed(2)}`; 
-            } 
-            
+      window.updateCalc = function() {
+    const q = parseInt(document.getElementById('saleQty').value) || 1;
+    const cur = config.currency;
+    let p = 0, txt = "";
+
+    if (saleMode === 'doc') {
+        // Opción Docena
+        p = saleItem.d;
+        txt = `Precio Docena: ${cur}${p}`;
+    } else if (saleMode === 'half') {
+        // Opción Media Docena
+        p = saleItem.d / 2;
+        txt = `Precio Media Docena: ${cur}${p.toFixed(2)}`;
+    } else {
+        // --- CAMBIO AQUÍ ---
+        // Opción Par (Unidad): Precio exacto de la docena dividido entre 12
+        p = saleItem.d / 12;
+        txt = `Precio Unitario (Par): ${cur}${p.toFixed(2)}`;
+    }
+
+    document.getElementById('unitPriceDisplay').innerText = txt;
+    // El toFixed(2) asegura que el total se redondee a 2 decimales visualmente
+    document.getElementById('saleTotalCalc').innerText = `${cur}${(p * q).toFixed(2)}`;
+}
             document.getElementById('unitPriceDisplay').innerText = txt; 
             document.getElementById('saleTotalCalc').innerText = `${cur}${(p*q).toFixed(2)}`; 
         }
@@ -885,4 +892,5 @@ window.delHist = function(id) {
     </script>
 </body>
 </html>
+
 
