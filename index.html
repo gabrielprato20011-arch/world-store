@@ -669,32 +669,26 @@
             updateCalc(); 
         }
         
-      window.updateCalc = function() {
-    const q = parseInt(document.getElementById('saleQty').value) || 1;
-    const cur = config.currency;
-    let p = 0, txt = "";
+        // --- AQUÍ ESTÁ EL CAMBIO SOLICITADO APLICADO ---
+        window.updateCalc = function() {
+            const q = parseInt(document.getElementById('saleQty').value) || 1;
+            const cur = config.currency;
+            let p = 0, txt = "";
 
-    if (saleMode === 'doc') {
-        // Opción Docena
-        p = saleItem.d;
-        txt = `Precio Docena: ${cur}${p}`;
-    } else if (saleMode === 'half') {
-        // Opción Media Docena
-        p = saleItem.d / 2;
-        txt = `Precio Media Docena: ${cur}${p.toFixed(2)}`;
-    } else {
-        // --- CAMBIO AQUÍ ---
-        // Opción Par (Unidad): Precio exacto de la docena dividido entre 12
-        p = saleItem.d / 12;
-        txt = `Precio Unitario (Par): ${cur}${p.toFixed(2)}`;
-    }
+            if (saleMode === 'doc') {
+                p = saleItem.d;
+                txt = `Precio Docena: ${cur}${p}`;
+            } else if (saleMode === 'half') {
+                p = saleItem.d / 2;
+                txt = `Precio Media Docena: ${cur}${p.toFixed(2)}`;
+            } else {
+                // Cálculo simple: Precio docena dividido entre 12
+                p = saleItem.d / 12;
+                txt = `Precio Unitario (Par): ${cur}${p.toFixed(2)}`;
+            }
 
-    document.getElementById('unitPriceDisplay').innerText = txt;
-    // El toFixed(2) asegura que el total se redondee a 2 decimales visualmente
-    document.getElementById('saleTotalCalc').innerText = `${cur}${(p * q).toFixed(2)}`;
-}
-            document.getElementById('unitPriceDisplay').innerText = txt; 
-            document.getElementById('saleTotalCalc').innerText = `${cur}${(p*q).toFixed(2)}`; 
+            document.getElementById('unitPriceDisplay').innerText = txt;
+            document.getElementById('saleTotalCalc').innerText = `${cur}${(p * q).toFixed(2)}`;
         }
         
         window.adjQty=(n)=>{ 
@@ -711,14 +705,7 @@
             // Texto para el recibo
             let typeLabel = saleMode==='doc' ? 'Docenas' : (saleMode==='half'?'Medias Doc':'Pares');
             let deduction = saleMode==='doc' ? 12*q : (saleMode==='half'?6*q:q); // Se deduce en unidades
-            let q_paq = saleMode==='doc' ? q : 0; // Paquetes completos (aprox para el user)
-
-            // Stock Logic: El stock visual es "paquetes/docenas", pero la logica interna deduce unidades
-            // Si el user maneja "72 piezas", 1 docena baja 12. 
-            // Para mantener la consistencia con el PDF original que implica venta mayorista, asumimos stock = Paquetes en display
-            // Sin embargo, si vendemos por par, hay que fraccionar.
-            // Solución Simple V9.2: El stock que se muestra es "Unidades Disponibles". El array PDF carga con stock: 72 (unidades/pares).
-            // Entonces: Docena = 12 unidades.
+            let q_paq = saleMode==='doc' ? q : 0; 
             
             cart.push({
                 pId:saleItem.id, 
@@ -800,59 +787,34 @@
         window.delProd=(id)=>{ if(confirm("¿Eliminar este producto?")) dbRef.ref('inventory').set(db.filter(x=>x.id!=id)); }
         
         function renderHistory(){ const t=document.getElementById('histBody');t.innerHTML="";let g=0;const c=config.currency; history.forEach(h=>{ g+=h.total; t.innerHTML+=`<tr><td><small>${h.date.split(',')[0]}</small></td><td><b>${h.client}</b></td><td><button class="btn" style="padding:2px 8px;font-size:0.7rem;background:#eee;color:#333;width:auto;" onclick="alert('${h.desc}')">Ver Items</button></td><td>${c}${h.total}</td><td><i class="fa-solid fa-print" style="color:var(--primary);cursor:pointer;margin-right:10px;" onclick="reprint(${h.id})"></i> <i class="fa-solid fa-trash" style="color:#aaa;cursor:pointer;" onclick="delHist(${h.id})"></i></td></tr>`}); document.getElementById('grandTotalHistory').innerText=`${c}${g.toFixed(2)}`; }
+
         // Función para Borrar Historial y DEVOLVER STOCK
-window.delHist = function(id) {
-    if (!confirm("⚠️ ¿Estás seguro de ELIMINAR esta venta?\n\nAl hacerlo, los productos se devolverán al inventario (Stock aumentará) y la venta desaparecerá de las cuentas.")) return;
+        window.delHist = function(id) {
+            if (!confirm("⚠️ ¿Estás seguro de ELIMINAR esta venta?\n\nAl hacerlo, los productos se devolverán al inventario (Stock aumentará) y la venta desaparecerá de las cuentas.")) return;
 
-    // 1. Buscar la venta específica en la base de datos (Nube)
-    dbRef.ref('history').once('value').then(snapshot => {
-        const historyData = snapshot.val();
-        if (!historyData) return;
-
-        let saleKey = null;
-        let saleData = null;
-
-        // Encontrar la llave y los datos usando el ID numérico
-        for (const [key, value] of Object.entries(historyData)) {
-            if (value.id === id) {
-                saleKey = key;
-                saleData = value;
-                break;
-            }
-        }
-
-        if (saleKey && saleData && saleData.items) {
-            // 2. Devolver stock (Sumar cantidades)
-            let updatedDb = [...db]; // Copia del inventario actual
-            
-            saleData.items.forEach(soldItem => {
-                // Buscar el producto en el inventario actual
-                const prodIndex = updatedDb.findIndex(p => p.id === soldItem.pId);
-                
-                if (prodIndex !== -1) {
-                    // Si el producto aun existe, devolvemos la cantidad descontada originalmente
-                    // nota: soldItem.deduct es la cantidad exacta de pares que se restaron
-                    updatedDb[prodIndex].stock = parseInt(updatedDb[prodIndex].stock) + parseInt(soldItem.deduct);
+            dbRef.ref('history').once('value').then(snapshot => {
+                const historyData = snapshot.val();
+                if (!historyData) return;
+                let saleKey = null;
+                let saleData = null;
+                for (const [key, value] of Object.entries(historyData)) {
+                    if (value.id === id) { saleKey = key; saleData = value; break; }
                 }
+
+                if (saleKey && saleData && saleData.items) {
+                    let updatedDb = [...db]; 
+                    saleData.items.forEach(soldItem => {
+                        const prodIndex = updatedDb.findIndex(p => p.id === soldItem.pId);
+                        if (prodIndex !== -1) {
+                            updatedDb[prodIndex].stock = parseInt(updatedDb[prodIndex].stock) + parseInt(soldItem.deduct);
+                        }
+                    });
+                    dbRef.ref('inventory').set(updatedDb);
+                    dbRef.ref('history/' + saleKey).remove().then(() => { Toast.show("Venta eliminada y Stock devuelto", "success"); renderInv(); })
+                        .catch(err => alert("Error al borrar: " + err.message));
+                } else { alert("No se encontraron los datos de la venta o no tiene productos asociados."); }
             });
-
-            // 3. Guardar el Inventario Actualizado en la Nube
-            dbRef.ref('inventory').set(updatedDb);
-
-            // 4. Borrar el registro del historial permanentemente
-            dbRef.ref('history/' + saleKey).remove()
-                .then(() => {
-                    Toast.show("Venta eliminada y Stock devuelto", "success");
-                    // Refrescar visualmente (El onValue lo hará automático, pero forzamos por seguridad visual)
-                    renderInv();
-                })
-                .catch(err => alert("Error al borrar: " + err.message));
-                
-        } else {
-            alert("No se encontraron los datos de la venta o no tiene productos asociados.");
         }
-    });
-}
         window.clearHistory=()=>{ if(confirm("⚠️ ¿BORRAR TODO EL HISTORIAL DE VENTAS? Esto no se puede deshacer.")) dbRef.ref('history').set(null); }
         window.reprint=(id)=>{const h=history.find(x=>x.id==id);if(h)printFromData(h,true);}
         
