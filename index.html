@@ -190,7 +190,7 @@
             </div>
             <div class="search-wrap">
                 <i class="fa-solid fa-magnifying-glass"></i>
-              <input type="text" id="searchInput" placeholder="Buscar modelo, código..." onkeyup="updateAllViews()">
+              <input type="text" id="searchInput" placeholder="Buscar modelo, código..." onkeyup="searchDelay()">
             </div>
             <div class="filter-group">
                 <div class="chip active" onclick="filterCat('all', this)">Todo</div>
@@ -635,25 +635,28 @@
             list.forEach(p=>{
                 const bg=p.cat==='Dama'?'#E91E63':(p.cat==='Caballero'?'#546E7A':'#FF9800');
                 const img=p.img||`https://placehold.co/300x300/eee/333?text=${p.c}`;
-                g.innerHTML+=`
-                <div class="card" onclick="openSale(${p.id})">
-                    <div class="card-img-wrap">
-                        <img src="${img}" loading="lazy">
-                        <span class="badge-cat" style="background:${bg}">${p.cat.substring(0,4)}</span>
-                    </div>
-                    <div class="card-content">
-                        <div>
-                            <h4>${p.c}</h4>
-                            <p>${p.m} <small>(${p.t})</small></p>
-                        </div>
-                        <div class="card-footer">
-                            <span class="stock">Disp: ${p.stock}</span>
-                            <span class="price">${config.currency}${p.d} <small style="font-size:0.6em;font-weight:400">/doc</small></span>
-                        </div>
-                    </div>
-                </div>`;
-            });
-        }
+                htmlContent += `
+        <div class="card" onclick="openSale(${p.id})">
+            <div class="card-img-wrap">
+                <img src="${img}" loading="lazy">
+                <span class="badge-cat" style="background:${bg}">${p.cat.substring(0,4)}</span>
+            </div>
+            <div class="card-content">
+                <div>
+                    <h4>${p.c}</h4>
+                    <p>${p.m} <small>(${p.t})</small></p>
+                </div>
+                <div class="card-footer">
+                    <span class="stock">Disp: ${p.stock}</span>
+                    <span class="price">${config.currency}${p.d} <small style="font-size:0.6em;font-weight:400">/doc</small></span>
+                </div>
+            </div>
+        </div>`;
+    });
+
+    // PINTAR UNA SOLA VEZ AL FINAL
+    g.innerHTML = htmlContent;
+} // Cierre de la función renderPOS
         
         window.filterCat=(c,el)=>{ curFilter=c; document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); el.classList.add('active'); updateAllViews(); }
         window.toggleCart=()=>{ document.getElementById('cartDrawer').classList.toggle('open'); document.getElementById('mainOverlay').classList.toggle('active'); renderCart(); }
@@ -775,12 +778,14 @@
     }
 
     // 4. DIBUJAR: Usamos la lista filtrada 'list' en lugar de 'db'
+ let htmlContent = ""; // Variable acumuladora
+
     list.forEach(p => {
         const i = p.img || "https://placehold.co/50?text=?";
-        // Agregué un pequeño badge con la categoría al lado del modelo para que se note el orden
         const catBadge = `<span style="font-size:0.7em; background:#eee; padding:2px 4px; border-radius:4px; margin-left:5px;">${p.cat}</span>`;
         
-        t.innerHTML += `
+        // Sumamos a la variable
+        htmlContent += `
         <tr>
             <td><img src="${i}" class="thumb"></td>
             <td><b>${p.c}</b>${catBadge}<br><small>${p.m}</small></td>
@@ -790,8 +795,11 @@
                 <button class="btn" style="background:#eee;color:#333;width:auto;padding:5px 10px;" onclick="openEdit(${p.id})"><i class="fa-solid fa-pen"></i></button>
                 <button class="btn" style="background:var(--primary);color:white;width:auto;padding:5px 10px;" onclick="delProd(${p.id})"><i class="fa-solid fa-trash"></i></button>
             </td>
-        </tr>`
+        </tr>`;
     });
+
+    // Pintar una sola vez
+    t.innerHTML = htmlContent;
 }
         
         window.openEdit=(id)=>{ 
@@ -882,9 +890,20 @@
         const Toast={show:(m,t='s')=>{const d=document.createElement('div');d.className=`toast ${t}`;d.innerHTML=`<i class="fa-solid fa-check-circle"></i> ${m}`;document.getElementById('toast-container').appendChild(d);setTimeout(()=>d.remove(),3000)}}
         
         window.onclick=e=>{if(e.target.className==='modal')e.target.style.display='none'}
+
+        let searchTimer; // Variable para controlar el tiempo
+
+window.searchDelay = function() {
+    clearTimeout(searchTimer); // Cancelar búsqueda anterior si sigues escribiendo
+    // Esperar 300ms (0.3 segundos) antes de buscar
+    searchTimer = setTimeout(() => {
+        window.updateAllViews(); 
+    }, 300); 
+}
     </script>
 </body>
 </html>
+
 
 
 
