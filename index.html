@@ -190,7 +190,8 @@
             </div>
             <div class="search-wrap">
                 <i class="fa-solid fa-magnifying-glass"></i>
-              <input type="text" id="searchInput" placeholder="Buscar modelo, código..." onkeyup="searchDelay()">
+                <!-- CAMBIO AQUÍ: Llamamos a searchDelay() en lugar de funciones directas para OPTIMIZAR -->
+                <input type="text" id="searchInput" placeholder="Buscar modelo, código..." onkeyup="searchDelay()">
             </div>
             <div class="filter-group">
                 <div class="chip active" onclick="filterCat('all', this)">Todo</div>
@@ -409,11 +410,28 @@
         // CONEXIONES
         dbRef.ref('inventory').on('value', s => { 
             db = s.val() || []; 
-            if(!s.val()) saveInitialData(); // Si está vacía, carga los datos del PDF automáticamente
-            renderPOS(); renderInv(); document.getElementById('loader').style.display='none'; 
+            if(!s.val()) saveInitialData(); 
+            // CAMBIO: Se usa la funcion unificada
+            window.updateAllViews(); 
+            document.getElementById('loader').style.display='none'; 
         });
         dbRef.ref('history').on('value', s => { history = s.val() ? Object.values(s.val()).sort((a,b)=>b.id-a.id) : []; renderHistory(); });
-        dbRef.ref('config').on('value', s => { if(s.val()){ config=s.val(); applyConfig(); renderPOS(); } else { saveConfig(); } });
+        dbRef.ref('config').on('value', s => { if(s.val()){ config=s.val(); applyConfig(); window.updateAllViews(); } else { saveConfig(); } });
+
+        // --- OPTIMIZACIÓN DE BÚSQUEDA (Debounce) ---
+        let searchTimer;
+        window.searchDelay = function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                window.updateAllViews(); 
+            }, 300); // 300ms de espera antes de ejecutar
+        }
+
+        // --- FUNCIÓN UNIFICADA ---
+        window.updateAllViews = function() {
+            renderPOS();
+            renderInv();
+        }
 
         // --- FUNCIONES COMPRESOR ---
         window.compressAndPreview = function(file, imgPreviewId, hiddenInputId) {
@@ -486,7 +504,6 @@
         }
         
         function saveInitialData(){
-            // TODOS LOS DATOS EXTRAIDOS DEL PDF
             const initialData = [
                 // DAMA
                 {c:"W 15",m:"Croc Clasico Baby",d:46,t:"36-40",cat:"Dama"},{c:"LC W72-3",m:"Croc Decorado",d:32,t:"35-40",cat:"Dama"},{c:"LC W99-1",m:"Sandalia Fashion",d:48,t:"36-40",cat:"Dama"},
@@ -597,10 +614,11 @@
             }
         }
         
-        window.nav=(v,e)=>{ document.querySelectorAll('.view-panel').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); document.getElementById('view-'+v).classList.add('active'); e.classList.add('active'); if(v==='pos')renderPOS(); }
+        window.nav=(v,e)=>{ document.querySelectorAll('.view-panel').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); document.getElementById('view-'+v).classList.add('active'); e.classList.add('active'); if(v==='pos')window.updateAllViews(); }
         
+        // --- FUNCIÓN RENDER POS OPTIMIZADA ---
         function renderPOS(){
-            // Check Maintenance - Admin bypass removed from URL for clean code, check local config
+            // Check Maintenance
             if(config.maintenance){ 
                 document.getElementById('posGrid').innerHTML=`
                 <div style="grid-column:1/-1; text-align:center; padding:50px;">
@@ -610,55 +628,53 @@
                 </div>`; 
                 return;
             }
-            // Esta función actualiza todo al mismo tiempo
-   window.updateAllViews = function() {
-    renderPOS(); // Actualiza el catálogo visual (cuadritos)
-    renderInv(); // Actualiza la tabla de inventario (lista)
-}
 
-            const g=document.getElementById('posGrid'); const txt=document.getElementById('searchInput').value.toLowerCase();
-            g.innerHTML="";
+            const g=document.getElementById('posGrid'); 
+            const txt=document.getElementById('searchInput').value.toLowerCase();
             
             // Normalizar categorías para filtro
             let targetCat = curFilter;
-            // Helper para filtrar categorías mixtas si es necesario, por ahora filtrado directo
             const list=db.filter(p=>(p.c.toLowerCase().includes(txt)||p.m.toLowerCase().includes(txt))&&(targetCat==='all'||p.cat===targetCat));
-            // --- NUEVO: ORDENAR POR CATEGORÍA ---
+            
+            // --- ORDENAR SIEMPRE POR CATEGORÍA ---
             list.sort((a, b) => a.cat.localeCompare(b.cat));
 
-            
             if(list.length === 0){
                 g.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#999;margin-top:20px;">No se encontraron productos.</p>`;
                 return;
             }
 
+            // --- OPTIMIZACIÓN DE PINTADO ---
+            let htmlContent = "";
+
             list.forEach(p=>{
                 const bg=p.cat==='Dama'?'#E91E63':(p.cat==='Caballero'?'#546E7A':'#FF9800');
                 const img=p.img||`https://placehold.co/300x300/eee/333?text=${p.c}`;
+                
                 htmlContent += `
-        <div class="card" onclick="openSale(${p.id})">
-            <div class="card-img-wrap">
-                <img src="${img}" loading="lazy">
-                <span class="badge-cat" style="background:${bg}">${p.cat.substring(0,4)}</span>
-            </div>
-            <div class="card-content">
-                <div>
-                    <h4>${p.c}</h4>
-                    <p>${p.m} <small>(${p.t})</small></p>
-                </div>
-                <div class="card-footer">
-                    <span class="stock">Disp: ${p.stock}</span>
-                    <span class="price">${config.currency}${p.d} <small style="font-size:0.6em;font-weight:400">/doc</small></span>
-                </div>
-            </div>
-        </div>`;
-    });
-
-    // PINTAR UNA SOLA VEZ AL FINAL
-    g.innerHTML = htmlContent;
-} // Cierre de la función renderPOS
+                <div class="card" onclick="openSale(${p.id})">
+                    <div class="card-img-wrap">
+                        <img src="${img}" loading="lazy">
+                        <span class="badge-cat" style="background:${bg}">${p.cat.substring(0,4)}</span>
+                    </div>
+                    <div class="card-content">
+                        <div>
+                            <h4>${p.c}</h4>
+                            <p>${p.m} <small>(${p.t})</small></p>
+                        </div>
+                        <div class="card-footer">
+                            <span class="stock">Disp: ${p.stock}</span>
+                            <span class="price">${config.currency}${p.d} <small style="font-size:0.6em;font-weight:400">/doc</small></span>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            
+            g.innerHTML = htmlContent;
+        }
         
-        window.filterCat=(c,el)=>{ curFilter=c; document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); el.classList.add('active'); updateAllViews(); }
+        // --- CAMBIO: Filtros actualizan TODO ---
+        window.filterCat=(c,el)=>{ curFilter=c; document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); el.classList.add('active'); window.updateAllViews(); }
         window.toggleCart=()=>{ document.getElementById('cartDrawer').classList.toggle('open'); document.getElementById('mainOverlay').classList.toggle('active'); renderCart(); }
         
         // --- LOGICA DE VENTAS ---
@@ -680,26 +696,25 @@
             updateCalc(); 
         }
         
-        // --- AQUÍ ESTÁ EL CAMBIO SOLICITADO APLICADO ---
-        window.updateCalc = function() {
-            const q = parseInt(document.getElementById('saleQty').value) || 1;
-            const cur = config.currency;
-            let p = 0, txt = "";
-
-            if (saleMode === 'doc') {
-                p = saleItem.d;
-                txt = `Precio Docena: ${cur}${p}`;
-            } else if (saleMode === 'half') {
-                p = saleItem.d / 2;
-                txt = `Precio Media Docena: ${cur}${p.toFixed(2)}`;
-            } else {
-                // Cálculo simple: Precio docena dividido entre 12
-                p = saleItem.d / 12;
-                txt = `Precio Unitario (Par): ${cur}${p.toFixed(2)}`;
-            }
-
-            document.getElementById('unitPriceDisplay').innerText = txt;
-            document.getElementById('saleTotalCalc').innerText = `${cur}${(p * q).toFixed(2)}`;
+        window.updateCalc=function(){ 
+            const q=parseInt(document.getElementById('saleQty').value)||1; 
+            const cur=config.currency; 
+            let p=0, txt=""; 
+            
+            if(saleMode==='doc'){ 
+                p=saleItem.d; 
+                txt=`Precio Docena: ${cur}${p}`; 
+            } else if(saleMode==='half'){ 
+                p=saleItem.d/2; 
+                txt=`Precio Media Docena: ${cur}${p.toFixed(2)}`; 
+            } else { 
+                // CORRECCIÓN PRECIO UNITARIO (DIV 12)
+                p = saleItem.d / 12; 
+                txt=`Precio Unitario (Par): ${cur}${p.toFixed(2)}`; 
+            } 
+            
+            document.getElementById('unitPriceDisplay').innerText = txt; 
+            document.getElementById('saleTotalCalc').innerText = `${cur}${(p*q).toFixed(2)}`; 
         }
         
         window.adjQty=(n)=>{ 
@@ -715,8 +730,7 @@
             
             // Texto para el recibo
             let typeLabel = saleMode==='doc' ? 'Docenas' : (saleMode==='half'?'Medias Doc':'Pares');
-            let deduction = saleMode==='doc' ? 12*q : (saleMode==='half'?6*q:q); // Se deduce en unidades
-            let q_paq = saleMode==='doc' ? q : 0; 
+            let deduction = saleMode==='doc' ? 12*q : (saleMode==='half'?6*q:q); 
             
             cart.push({
                 pId:saleItem.id, 
@@ -756,51 +770,46 @@
         }
         
         // ADMIN & PRINT
-    function renderInv() {
-    const t = document.getElementById('invBody');
-    t.innerHTML = "";
-    const c = config.currency;
-    const txt = document.getElementById('searchInput').value.toLowerCase(); // 1. Leer buscador
+        // --- FUNCIÓN RENDER INV OPTIMIZADA Y FILTRABLE ---
+        function renderInv(){ 
+            const t=document.getElementById('invBody'); t.innerHTML=""; const c=config.currency; 
+            
+            // Leemos el buscador tambien aquí
+            const txt = document.getElementById('searchInput').value.toLowerCase();
+            let targetCat = curFilter;
 
-    // 2. FILTRAR: Igual que en el catálogo (coincidencia de texto + filtro de categoría)
-    // Usamos 'curFilter' que es la variable global donde se guarda si seleccionaste "Dama", "Caballero", etc.
-    let list = db.filter(p => 
-        (p.c.toLowerCase().includes(txt) || p.m.toLowerCase().includes(txt)) && 
-        (curFilter === 'all' || p.cat === curFilter)
-    );
+            // Filtro aplicado a Inventario
+            const list = db.filter(p => (p.c.toLowerCase().includes(txt) || p.m.toLowerCase().includes(txt)) && (targetCat === 'all' || p.cat === targetCat));
+            
+            // Ordenar por categoría
+            list.sort((a, b) => a.cat.localeCompare(b.cat));
 
-    // 3. ORDENAR: Agrupar alfabéticamente por Categoría
-    list.sort((a, b) => a.cat.localeCompare(b.cat));
+            if(list.length === 0){
+                t.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No hay resultados en Inventario</td></tr>`;
+                return;
+            }
 
-    if(list.length === 0) {
-        t.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No hay resultados en Inventario</td></tr>`;
-        return;
-    }
+            // String builder
+            let htmlContent = "";
 
-    // 4. DIBUJAR: Usamos la lista filtrada 'list' en lugar de 'db'
- let htmlContent = ""; // Variable acumuladora
-
-    list.forEach(p => {
-        const i = p.img || "https://placehold.co/50?text=?";
-        const catBadge = `<span style="font-size:0.7em; background:#eee; padding:2px 4px; border-radius:4px; margin-left:5px;">${p.cat}</span>`;
-        
-        // Sumamos a la variable
-        htmlContent += `
-        <tr>
-            <td><img src="${i}" class="thumb"></td>
-            <td><b>${p.c}</b>${catBadge}<br><small>${p.m}</small></td>
-            <td>${c}${p.d}</td>
-            <td>${p.stock} u.</td>
-            <td>
-                <button class="btn" style="background:#eee;color:#333;width:auto;padding:5px 10px;" onclick="openEdit(${p.id})"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn" style="background:var(--primary);color:white;width:auto;padding:5px 10px;" onclick="delProd(${p.id})"><i class="fa-solid fa-trash"></i></button>
-            </td>
-        </tr>`;
-    });
-
-    // Pintar una sola vez
-    t.innerHTML = htmlContent;
-}
+            list.forEach(p=>{ 
+                const i=p.img||"https://placehold.co/50?text=?";
+                const catBadge = `<span style="font-size:0.7em; background:#eee; padding:2px 4px; border-radius:4px; margin-left:5px;">${p.cat}</span>`;
+                htmlContent+=`
+                <tr>
+                    <td><img src="${i}" class="thumb"></td>
+                    <td><b>${p.c}</b>${catBadge}<br><small>${p.m}</small></td>
+                    <td>${c}${p.d}</td>
+                    <td>${p.stock} u.</td>
+                    <td>
+                        <button class="btn" style="background:#eee;color:#333;width:auto;padding:5px 10px;" onclick="openEdit(${p.id})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn" style="background:var(--primary);color:white;width:auto;padding:5px 10px;" onclick="delProd(${p.id})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`
+            });
+            
+            t.innerHTML = htmlContent;
+        }
         
         window.openEdit=(id)=>{ 
             const p=db.find(x=>x.id==id);
@@ -826,34 +835,59 @@
         window.delProd=(id)=>{ if(confirm("¿Eliminar este producto?")) dbRef.ref('inventory').set(db.filter(x=>x.id!=id)); }
         
         function renderHistory(){ const t=document.getElementById('histBody');t.innerHTML="";let g=0;const c=config.currency; history.forEach(h=>{ g+=h.total; t.innerHTML+=`<tr><td><small>${h.date.split(',')[0]}</small></td><td><b>${h.client}</b></td><td><button class="btn" style="padding:2px 8px;font-size:0.7rem;background:#eee;color:#333;width:auto;" onclick="alert('${h.desc}')">Ver Items</button></td><td>${c}${h.total}</td><td><i class="fa-solid fa-print" style="color:var(--primary);cursor:pointer;margin-right:10px;" onclick="reprint(${h.id})"></i> <i class="fa-solid fa-trash" style="color:#aaa;cursor:pointer;" onclick="delHist(${h.id})"></i></td></tr>`}); document.getElementById('grandTotalHistory').innerText=`${c}${g.toFixed(2)}`; }
-
         // Función para Borrar Historial y DEVOLVER STOCK
-        window.delHist = function(id) {
-            if (!confirm("⚠️ ¿Estás seguro de ELIMINAR esta venta?\n\nAl hacerlo, los productos se devolverán al inventario (Stock aumentará) y la venta desaparecerá de las cuentas.")) return;
+window.delHist = function(id) {
+    if (!confirm("⚠️ ¿Estás seguro de ELIMINAR esta venta?\n\nAl hacerlo, los productos se devolverán al inventario (Stock aumentará) y la venta desaparecerá de las cuentas.")) return;
 
-            dbRef.ref('history').once('value').then(snapshot => {
-                const historyData = snapshot.val();
-                if (!historyData) return;
-                let saleKey = null;
-                let saleData = null;
-                for (const [key, value] of Object.entries(historyData)) {
-                    if (value.id === id) { saleKey = key; saleData = value; break; }
-                }
+    // 1. Buscar la venta específica en la base de datos (Nube)
+    dbRef.ref('history').once('value').then(snapshot => {
+        const historyData = snapshot.val();
+        if (!historyData) return;
 
-                if (saleKey && saleData && saleData.items) {
-                    let updatedDb = [...db]; 
-                    saleData.items.forEach(soldItem => {
-                        const prodIndex = updatedDb.findIndex(p => p.id === soldItem.pId);
-                        if (prodIndex !== -1) {
-                            updatedDb[prodIndex].stock = parseInt(updatedDb[prodIndex].stock) + parseInt(soldItem.deduct);
-                        }
-                    });
-                    dbRef.ref('inventory').set(updatedDb);
-                    dbRef.ref('history/' + saleKey).remove().then(() => { Toast.show("Venta eliminada y Stock devuelto", "success"); renderInv(); })
-                        .catch(err => alert("Error al borrar: " + err.message));
-                } else { alert("No se encontraron los datos de la venta o no tiene productos asociados."); }
-            });
+        let saleKey = null;
+        let saleData = null;
+
+        // Encontrar la llave y los datos usando el ID numérico
+        for (const [key, value] of Object.entries(historyData)) {
+            if (value.id === id) {
+                saleKey = key;
+                saleData = value;
+                break;
+            }
         }
+
+        if (saleKey && saleData && saleData.items) {
+            // 2. Devolver stock (Sumar cantidades)
+            let updatedDb = [...db]; // Copia del inventario actual
+            
+            saleData.items.forEach(soldItem => {
+                // Buscar el producto en el inventario actual
+                const prodIndex = updatedDb.findIndex(p => p.id === soldItem.pId);
+                
+                if (prodIndex !== -1) {
+                    // Si el producto aun existe, devolvemos la cantidad descontada originalmente
+                    // nota: soldItem.deduct es la cantidad exacta de pares que se restaron
+                    updatedDb[prodIndex].stock = parseInt(updatedDb[prodIndex].stock) + parseInt(soldItem.deduct);
+                }
+            });
+
+            // 3. Guardar el Inventario Actualizado en la Nube
+            dbRef.ref('inventory').set(updatedDb);
+
+            // 4. Borrar el registro del historial permanentemente
+            dbRef.ref('history/' + saleKey).remove()
+                .then(() => {
+                    Toast.show("Venta eliminada y Stock devuelto", "success");
+                    // Refrescar visualmente (El onValue lo hará automático, pero forzamos por seguridad visual)
+                    renderInv();
+                })
+                .catch(err => alert("Error al borrar: " + err.message));
+                
+        } else {
+            alert("No se encontraron los datos de la venta o no tiene productos asociados.");
+        }
+    });
+}
         window.clearHistory=()=>{ if(confirm("⚠️ ¿BORRAR TODO EL HISTORIAL DE VENTAS? Esto no se puede deshacer.")) dbRef.ref('history').set(null); }
         window.reprint=(id)=>{const h=history.find(x=>x.id==id);if(h)printFromData(h,true);}
         
@@ -890,19 +924,10 @@
         const Toast={show:(m,t='s')=>{const d=document.createElement('div');d.className=`toast ${t}`;d.innerHTML=`<i class="fa-solid fa-check-circle"></i> ${m}`;document.getElementById('toast-container').appendChild(d);setTimeout(()=>d.remove(),3000)}}
         
         window.onclick=e=>{if(e.target.className==='modal')e.target.style.display='none'}
-
-        let searchTimer; // Variable para controlar el tiempo
-
-window.searchDelay = function() {
-    clearTimeout(searchTimer); // Cancelar búsqueda anterior si sigues escribiendo
-    // Esperar 300ms (0.3 segundos) antes de buscar
-    searchTimer = setTimeout(() => {
-        window.updateAllViews(); 
-    }, 300); 
-}
     </script>
 </body>
 </html>
+
 
 
 
