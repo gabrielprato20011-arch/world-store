@@ -623,6 +623,9 @@
             let targetCat = curFilter;
             // Helper para filtrar categorías mixtas si es necesario, por ahora filtrado directo
             const list=db.filter(p=>(p.c.toLowerCase().includes(txt)||p.m.toLowerCase().includes(txt))&&(targetCat==='all'||p.cat===targetCat));
+            // --- NUEVO: ORDENAR POR CATEGORÍA ---
+            list.sort((a, b) => a.cat.localeCompare(b.cat));
+
             
             if(list.length === 0){
                 g.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#999;margin-top:20px;">No se encontraron productos.</p>`;
@@ -882,6 +885,7 @@
     </script>
 </body>
 </html>
+
 
 
 
