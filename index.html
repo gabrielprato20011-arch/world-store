@@ -190,7 +190,7 @@
             </div>
             <div class="search-wrap">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="searchInput" placeholder="Buscar modelo, código..." onkeyup="renderPOS()">
+              <input type="text" id="searchInput" placeholder="Buscar modelo, código..." onkeyup="updateAllViews()">
             </div>
             <div class="filter-group">
                 <div class="chip active" onclick="filterCat('all', this)">Todo</div>
@@ -610,6 +610,11 @@
                 </div>`; 
                 return;
             }
+            // Esta función actualiza todo al mismo tiempo
+   window.updateAllViews = function() {
+    renderPOS(); // Actualiza el catálogo visual (cuadritos)
+    renderInv(); // Actualiza la tabla de inventario (lista)
+}
 
             const g=document.getElementById('posGrid'); const txt=document.getElementById('searchInput').value.toLowerCase();
             g.innerHTML="";
@@ -647,7 +652,7 @@
             });
         }
         
-        window.filterCat=(c,el)=>{ curFilter=c; document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); el.classList.add('active'); renderPOS(); }
+        window.filterCat=(c,el)=>{ curFilter=c; document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); el.classList.add('active'); updateAllViews(); }
         window.toggleCart=()=>{ document.getElementById('cartDrawer').classList.toggle('open'); document.getElementById('mainOverlay').classList.toggle('active'); renderCart(); }
         
         // --- LOGICA DE VENTAS ---
@@ -745,23 +750,46 @@
         }
         
         // ADMIN & PRINT
-        function renderInv(){ 
-            const t=document.getElementById('invBody'); t.innerHTML=""; const c=config.currency; 
-            db.forEach(p=>{ 
-                const i=p.img||"https://placehold.co/50?text=?";
-                t.innerHTML+=`
-                <tr>
-                    <td><img src="${i}" class="thumb"></td>
-                    <td><b>${p.c}</b><br><small>${p.m}</small></td>
-                    <td>${c}${p.d}</td>
-                    <td>${p.stock} u.</td>
-                    <td>
-                        <button class="btn" style="background:#eee;color:#333;width:auto;padding:5px 10px;" onclick="openEdit(${p.id})"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn" style="background:var(--primary);color:white;width:auto;padding:5px 10px;" onclick="delProd(${p.id})"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>`
-            });
-        }
+    function renderInv() {
+    const t = document.getElementById('invBody');
+    t.innerHTML = "";
+    const c = config.currency;
+    const txt = document.getElementById('searchInput').value.toLowerCase(); // 1. Leer buscador
+
+    // 2. FILTRAR: Igual que en el catálogo (coincidencia de texto + filtro de categoría)
+    // Usamos 'curFilter' que es la variable global donde se guarda si seleccionaste "Dama", "Caballero", etc.
+    let list = db.filter(p => 
+        (p.c.toLowerCase().includes(txt) || p.m.toLowerCase().includes(txt)) && 
+        (curFilter === 'all' || p.cat === curFilter)
+    );
+
+    // 3. ORDENAR: Agrupar alfabéticamente por Categoría
+    list.sort((a, b) => a.cat.localeCompare(b.cat));
+
+    if(list.length === 0) {
+        t.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No hay resultados en Inventario</td></tr>`;
+        return;
+    }
+
+    // 4. DIBUJAR: Usamos la lista filtrada 'list' en lugar de 'db'
+    list.forEach(p => {
+        const i = p.img || "https://placehold.co/50?text=?";
+        // Agregué un pequeño badge con la categoría al lado del modelo para que se note el orden
+        const catBadge = `<span style="font-size:0.7em; background:#eee; padding:2px 4px; border-radius:4px; margin-left:5px;">${p.cat}</span>`;
+        
+        t.innerHTML += `
+        <tr>
+            <td><img src="${i}" class="thumb"></td>
+            <td><b>${p.c}</b>${catBadge}<br><small>${p.m}</small></td>
+            <td>${c}${p.d}</td>
+            <td>${p.stock} u.</td>
+            <td>
+                <button class="btn" style="background:#eee;color:#333;width:auto;padding:5px 10px;" onclick="openEdit(${p.id})"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn" style="background:var(--primary);color:white;width:auto;padding:5px 10px;" onclick="delProd(${p.id})"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`
+    });
+}
         
         window.openEdit=(id)=>{ 
             const p=db.find(x=>x.id==id);
@@ -854,5 +882,6 @@
     </script>
 </body>
 </html>
+
 
 
