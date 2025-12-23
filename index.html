@@ -181,8 +181,14 @@
 
         /* --- TABLES (Clean Style) --- */
         .table-wrap { 
-            background: white; border-radius: 16px; overflow: hidden; 
-            box-shadow: var(--shadow-soft); border: 1px solid rgba(0,0,0,0.02);
+            background: white; 
+            border-radius: 16px; 
+            /* AQUÍ ESTÁ EL ARREGLO CLAVE: */
+            overflow-x: auto; /* Permite deslizar horizontalmente */
+            -webkit-overflow-scrolling: touch; /* Deslizamiento suave en iPhone/Android */
+            box-shadow: var(--shadow-soft); 
+            border: 1px solid rgba(0,0,0,0.02);
+            width: 100%; /* Asegura que ocupe el ancho disponible */
         }
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 600px; }
         thead { background: #f9f9f9; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-weight: 700; }
@@ -275,7 +281,7 @@
         #print-layer { display: block !important; position: absolute; top: 0; left: 0; width: 100%; z-index: 99999; background: white; min-height: 100vh;} 
         @page { margin: 5mm; } 
     }
-</style>
+
     </style>
 </head>
 
@@ -1081,6 +1087,7 @@ window.delHist = function(id) {
     </script>
 </body>
 </html>
+
 
 
 
