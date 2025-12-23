@@ -267,7 +267,15 @@
         }
         
         @keyframes spin { 100% { transform:rotate(360deg); } }
-        @media print { body > *:not(#print-layer) { display: none !important; } #print-layer { display: block !important; position: absolute; top: 0; left: 0; width: 100%; z-index: 99999; background: white; min-height: 100vh;} @page { margin: 5mm; } }
+       /* CORRECCIÓN: OCULTAR NOTA DE ENTREGA EN PANTALLA */
+    #print-layer { display: none; }
+
+    @media print { 
+        body > *:not(#print-layer) { display: none !important; } 
+        #print-layer { display: block !important; position: absolute; top: 0; left: 0; width: 100%; z-index: 99999; background: white; min-height: 100vh;} 
+        @page { margin: 5mm; } 
+    }
+</style>
     </style>
 </head>
 
@@ -950,7 +958,37 @@
         
         window.delProd=(id)=>{ if(confirm("¿Eliminar este producto?")) dbRef.ref('inventory').set(db.filter(x=>x.id!=id)); }
         
-        function renderHistory(){ const t=document.getElementById('histBody');t.innerHTML="";let g=0;const c=config.currency; history.forEach(h=>{ g+=h.total; t.innerHTML+=`<tr><td><small>${h.date.split(',')[0]}</small></td><td><b>${h.client}</b></td><td><button class="btn" style="padding:2px 8px;font-size:0.7rem;background:#eee;color:#333;width:auto;" onclick="alert('${h.desc}')">Ver Items</button></td><td>${c}${h.total}</td><td><i class="fa-solid fa-print" style="color:var(--primary);cursor:pointer;margin-right:10px;" onclick="reprint(${h.id})"></i> <i class="fa-solid fa-trash" style="color:#aaa;cursor:pointer;" onclick="delHist(${h.id})"></i></td></tr>`}); document.getElementById('grandTotalHistory').innerText=`${c}${g.toFixed(2)}`; }
+       function renderHistory() {
+    const t = document.getElementById('histBody');
+    t.innerHTML = "";
+    let g = 0;
+    const c = config.currency;
+
+    history.forEach(h => {
+        g += h.total;
+        
+        // --- AQUÍ ESTABA EL PROBLEMA ---
+        // Usamos parseFloat(h.total).toFixed(2) para cortar los decimales extra
+        t.innerHTML += `
+        <tr>
+            <td><small>${h.date.split(',')[0]}</small></td>
+            <td><b>${h.client}</b></td>
+            <td>
+                <button class="btn" style="padding:4px 10px; font-size:0.7rem; background:#f0f0f0; color:#555; width:auto; box-shadow:none;" onclick="alert('${h.desc}')">Ver Items</button>
+            </td>
+            <td style="font-weight:bold; color:var(--dark);">
+                ${c}${parseFloat(h.total).toFixed(2)}
+            </td>
+            <td>
+                <i class="fa-solid fa-print" style="color:var(--primary);cursor:pointer;margin-right:10px;" onclick="reprint(${h.id})" title="Imprimir"></i> 
+                <i class="fa-solid fa-trash" style="color:#bdbdbd;cursor:pointer;" onclick="delHist(${h.id})" title="Eliminar"></i>
+            </td>
+        </tr>`;
+    });
+
+    // También aseguramos el total general
+    document.getElementById('grandTotalHistory').innerText = `${c}${g.toFixed(2)}`;
+}
         // Función para Borrar Historial y DEVOLVER STOCK
 window.delHist = function(id) {
     if (!confirm("⚠️ ¿Estás seguro de ELIMINAR esta venta?\n\nAl hacerlo, los productos se devolverán al inventario (Stock aumentará) y la venta desaparecerá de las cuentas.")) return;
@@ -1043,6 +1081,7 @@ window.delHist = function(id) {
     </script>
 </body>
 </html>
+
 
 
 
