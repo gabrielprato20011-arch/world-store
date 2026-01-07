@@ -854,28 +854,48 @@
             updateCalc(); 
         }
         
-        window.confirmAdd=function(){ 
-            const q=parseInt(document.getElementById('saleQty').value); 
-            const t=parseFloat(document.getElementById('saleTotalCalc').innerText.replace(/[^0-9.]/g,''));
-            
-            // Texto para el recibo
-            let typeLabel = saleMode==='doc' ? 'Docenas' : (saleMode==='half'?'Medias Doc':'Pares');
-            let deduction = saleMode==='doc' ? 12*q : (saleMode==='half'?6*q:q); 
-            
-            cart.push({
-                pId:saleItem.id, 
-                c:saleItem.c, 
-                m:saleItem.m, 
-                qtyTxt:`${q} ${typeLabel}`, 
-                total:t, 
-                deduct: deduction
-            });
-            
-            closeModal('modalSale'); 
-            renderCart(); 
-            toggleCart(); 
-            Toast.show("Agregado al Carrito");
-        }
+      window.confirmAdd = function() {
+    // 1. Obtener cantidad del input
+    const q = parseInt(document.getElementById('saleQty').value);
+    
+    // 2. CALCULAR EL DESCUENTO REAL (Unidades)
+    // Definimos cuántos pares se van a restar según el modo (Docena=12, Media=6, Par=1)
+    let deduction = 0;
+    if(saleMode === 'doc') deduction = 12 * q;
+    else if(saleMode === 'half') deduction = 6 * q;
+    else deduction = q; // unitario
+
+    // 3. VERIFICAR LO QUE YA ESTÁ EN EL CARRITO
+    // Si ya agregaste este mismo producto al carrito antes, debemos sumarlo para la validación
+    const alreadyInCart = cart.filter(item => item.pId === saleItem.id).reduce((sum, item) => sum + item.deduct, 0);
+    
+    const totalRequired = deduction + alreadyInCart;
+
+    // 4. VALIDACIÓN DE SEGURIDAD (EL CAMBIO CLAVE)
+    if (totalRequired > saleItem.stock) {
+        // Si pedimos más de lo que hay, soltamos el aviso y DETENEMOS TODO (return)
+        alert(`⚠️ STOCK INSUFICIENTE\n\nDisponible en bodega: ${saleItem.stock} unidades.\n(Tienes ${alreadyInCart} en el carrito y tratas de agregar ${deduction} más).\n\nNo se puede procesar.`);
+        return; 
+    }
+
+    // --- SI HAY STOCK, CONTINUAMOS NORMAL ---
+    const t = parseFloat(document.getElementById('saleTotalCalc').innerText.replace(/[^0-9.]/g, ''));
+    let typeLabel = saleMode === 'doc' ? 'Docenas' : (saleMode === 'half' ? 'Medias Doc' : 'Pares');
+
+    cart.push({
+        pId: saleItem.id,
+        c: saleItem.c,
+        m: saleItem.m,
+        qtyTxt: `${q} ${typeLabel}`,
+        total: t,
+        deduct: deduction
+    });
+
+    closeModal('modalSale');
+    renderCart();
+    toggleCart();
+    Toast.show("Agregado al Carrito");
+}
         
         function renderCart(){ 
             const c=document.getElementById('cartContainer');
@@ -1087,6 +1107,7 @@ window.delHist = function(id) {
     </script>
 </body>
 </html>
+
 
 
 
