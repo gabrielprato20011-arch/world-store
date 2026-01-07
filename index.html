@@ -304,6 +304,7 @@
         <div class="nav-menu">
             <div class="nav-item active" onclick="nav('pos', this)"><i class="fa-solid fa-store"></i> <span>Catálogo</span></div>
             <div class="nav-item" onclick="nav('history', this)"><i class="fa-solid fa-receipt"></i> <span>Ventas</span></div>
+            <div class="nav-item" onclick="nav('profit', this)"><i class="fa-solid fa-chart-line"></i> <span>Ganancias</span></div>
             <div class="nav-item" onclick="nav('inv', this)"><i class="fa-solid fa-boxes-stacked"></i> <span>Inventario</span></div>
             <div class="nav-item" onclick="toggleCart()"><i class="fa-solid fa-cart-shopping"></i> <span>Carrito <b id="cartCountBadge" style="background:var(--primary); color:white; padding:1px 6px; border-radius:10px; font-size:0.7em;">0</b></span></div>
             <div class="nav-item" onclick="nav('config', this)"><i class="fa-solid fa-sliders"></i> <span>Configuración</span></div>
@@ -422,6 +423,34 @@
                 <button class="btn btn-blue" style="background:#607D8B; max-width:300px;" onclick="window.reloadInitialData()"><i class="fa-solid fa-database"></i> Recargar Catálogo PDF Original</button>
             </div>
         </div>
+        <!-- VIEW PROFIT (NUEVA PESTAÑA) -->
+<div id="view-profit" class="view-panel">
+    <div style="background:white; padding:20px; border-radius:16px; margin-bottom:20px; box-shadow:var(--shadow-soft); display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <h3 style="margin:0; color:var(--dark);">Reporte de Ganancias</h3>
+            <small style="color:#777;">Utilidad Neta basada en tabla de Costos</small>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:0.8rem;color:#777">Ganancia Total</div>
+            <div style="font-size:1.8rem;font-weight:800;color:#2E7D32" id="totalProfitDisplay">$0.00</div>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Venta / Cliente</th>
+                    <th>Items Vendidos</th>
+                    <th style="text-align:right">Total Venta</th>
+                    <th style="text-align:right; color:#2E7D32">Ganancia Est.</th>
+                </tr>
+            </thead>
+            <tbody id="profitBody"></tbody>
+        </table>
+    </div>
+</div>
     </main>
 
     <!-- DRAWER & MODALS -->
@@ -1104,9 +1133,89 @@ window.delHist = function(id) {
         const Toast={show:(m,t='s')=>{const d=document.createElement('div');d.className=`toast ${t}`;d.innerHTML=`<i class="fa-solid fa-check-circle"></i> ${m}`;document.getElementById('toast-container').appendChild(d);setTimeout(()=>d.remove(),3000)}}
         
         window.onclick=e=>{if(e.target.className==='modal')e.target.style.display='none'}
+        // --- BASE DE DATOS DE GANANCIAS (EXTRAÍDA DEL PDF) ---
+const PROFIT_DB = {
+    "HY 001": 5.5, "HY 002-1": 5.5, "HY 002-3": 5.5, "HY 003-1": 5.5, "HY 006-1": 5.5, 
+    "LC C-04": 6.5, "HY 007": 5.5, "HY 009-1": 5.5, "HY 009-2": 5.5, "HY 010": 5.5, 
+    "HY 011-1": 5.5, "HY 011-2": 5.5, "LC 05": 5.5, "HY 013": 5.5, "LC 07-1": 5.5, 
+    "HY 015": 5.5, "HY 015-1": 5.5, "HY 016": 5.5, "HY 016-1": 5.5, "HY 017-1": 5.5, 
+    "HY 017-2": 5.5, "HY 018-1": 5.5, "HY 018-2": 5.5, "HY 019": 5.5, "HY 020-1": 6.5, 
+    "LC LB 03": 7.5, "HY 020-3": 5.5, "LC PW33": 6.5, "HY 020-5": 5.5, "HY 021-1": 5.5, 
+    "HY 022-1": 5.5, "LC W15": 5.5, "HY 026-1": 5.5, "HY 027": 7.5, "LC W72-3": 6.5, 
+    "HY 028-4": 5.5, "HY 029-1": 10.5, "HY 030-3": 5.5, "HY 031-4": 10.5, "HY 032": 5.5, 
+    "HY 032-1": 5.5, "HY 033": 5.5, "HY 035": 5.5, "HY 037-1": 5.5, "HY 038-1": 6.5, 
+    "HY 038-2": 6.5, "HY 039-1": 6.5, "HY 040-1": 5.5, "HY 040-2": 5.5, "HY 040-3": 5.5, 
+    "HY 040-4": 5.5, "HY 040-6": 5.5, "HY 042": 5.5, "HY 045": 5.5, "HY 046-1": 5.5, 
+    "HY 047-1": 4.0, "HY 047-2": 5.5, "HY 047-3": 5.5, "HY 048-1": 5.5, "HY 048-2": 5.5, 
+    "HY 049": 5.5, "HY 049-1": 11.5, "HY 055-4": 6.5, "HY 055-5": 6.5, "HY 055-6": 6.5, 
+    "HY 055-7": 6.5, "HY 056": 5.5, "HY 058-1": 5.5, "HY 060": 6.5, "HY 060-3": 5.5, 
+    "HY 060-1": 5.5, "HY 061-1": 5.5, "HY 062": 5.5, "HY 066": 5.5, "HY 066-1": 5.5, 
+    "HY 066-2": 8.5, "HY 067-3": 5.5, "HY 068": 5.5, "HY 076": 5.5, "HY 077": 5.5, 
+    "LC LA 08": 5.5, "LC A-2402": 5.5, "LC A-2402D": 5.5, "LC A-2403": 6.5, "LC AM14-1": 5.5, 
+    "LC B-2426-1": 5.5, "LC B-2426": 5.5, "LC C-02-1": 9.5, "LC C-02": 9.5, "LC C-09D": 5.5, 
+    "LC C-09": 5.5, "LC C-55-1": 7.5, "LC C-55": 7.5, "LC D-08-1": 5.5, "LC D-08": 5.5, 
+    "LC D-55-1": 7.5, "LC D-55": 7.5, "LC M14-2": 5.5, "LC M-15D": 5.5, "LC M-75": 6.5, 
+    "LC M-76": 5.5, "LC M-99-1": 8.5, "LC W-801": 6.5, "LC W-99-1": 8.5, "LC W-99": 7.5, 
+    "G 008B": 5.5, "G 148": 6.5, "RS 101": 8.5, "RS 102": 8.9, "RS 103": 8.5, "RS 105": 8.5, 
+    "RS 106": 15.5, "RS 107": 8.3, "RS 108": 9.5, "RS 109": 8.7, "RS 110": 16.1, "RS 111": 11.5, 
+    "RS 112": 5.5, "RS 113": 7.5, "RS 115": 6.5, "LC 01": 5.5, "RS 118": 6.5, "RS 119": 7.5, 
+    "RS 121": 8.5, "RS 123": 10.5, "RS 125": 11.5, "LC W-06": 5.5, "RS 133": 5.5, "RS 202": 9.5, 
+    "RS A1": 5.5, "RS A2": 5.7, "RS A2-1": 5.5, "RS A3": 5.9, "LC B2404": 6.5, "RS A7": 9.5, 
+    "RS A8": 9.3, "RS A9": 8.5, "RS A10": 8.0, "LO 020": 5.5, "LO 078-5": 5.5, "LO 043": 5.5, 
+    "SM 99-1": 10.5, "SM 99-3": 10.5, "SM 99-4": 10.5, "SM 99-5": 10.5, "SM 99-8": 10.5, 
+    "M-15": 9.5, "LO 024": 7.5
+};
+
+function renderProfit() {
+    const t = document.getElementById('profitBody');
+    t.innerHTML = "";
+    let grandTotalProfit = 0;
+    const c = config.currency;
+
+    history.forEach(h => {
+        let saleProfit = 0;
+        // Calcular ganancia por cada item vendido en esta venta
+        h.items.forEach(item => {
+            // Buscamos la ganancia por docena usando el CÓDIGO del producto
+            // Limpiamos espacios para asegurar que coincida mejor
+            let code = item.c.trim();
+            let profitPerDozen = PROFIT_DB[code] || 0; 
+
+            // Si no encuentra el código exacto, intenta una ganancia por defecto de 5.5 (seguridad)
+            if(profitPerDozen === 0) profitPerDozen = 5.5; 
+
+            // FÓRMULA: (GananciaDocena / 12) * Cantidad_Unidades_Vendidas
+            let itemProfit = (profitPerDozen / 12) * item.deduct;
+            saleProfit += itemProfit;
+        });
+
+        grandTotalProfit += saleProfit;
+
+        t.innerHTML += `
+        <tr>
+            <td><small>${h.date.split(',')[0]}</small></td>
+            <td><b>${h.client}</b><br><small style="color:#888;">ID: #${h.id.toString().slice(-4)}</small></td>
+            <td>${h.desc}</td>
+            <td style="text-align:right">${c}${parseFloat(h.total).toFixed(2)}</td>
+            <td style="text-align:right; font-weight:bold; color:#2E7D32;">
+                + ${c}${saleProfit.toFixed(2)}
+            </td>
+        </tr>`;
+    });
+
+    document.getElementById('totalProfitDisplay').innerText = `${c}${grandTotalProfit.toFixed(2)}`;
+}
+
+// Actualizar también ganancias al navegar o cambiar datos
+const originalNav = window.nav;
+window.nav = function(v, e) {
+    originalNav(v, e); // Llama la función original
+    if (v === 'profit') renderProfit(); // Si vamos a profit, calculamos
+};
     </script>
 </body>
 </html>
+
 
 
 
