@@ -607,20 +607,32 @@
         });
 
         // Esta es la función que llama el botón "INGRESAR"
-        window.appLogin = function() {
+       window.appLogin = function() {
             const e = document.getElementById('txtEmail').value;
             const p = document.getElementById('txtPass').value;
             const btn = document.getElementById('btnLogin');
             const err = document.getElementById('loginError');
 
-            if(!e || !p) { err.innerText = "Faltan datos."; err.style.display = 'block'; return; }
+            if(!e || !p) {
+                err.innerText = "Ingrese correo y contraseña.";
+                err.style.display = 'block';
+                return;
+            }
 
-            btn.innerText = "Verificando..."; btn.disabled = true; err.style.display = 'none';
+            btn.innerText = "Verificando...";
+            btn.disabled = true;
+            err.style.display = 'none';
 
-            auth.signInWithEmailAndPassword(e, p).catch(error => {
-                btn.innerText = "INGRESAR"; btn.disabled = false;
-                err.innerText = "Datos incorrectos."; err.style.display = 'block';
-            });
+            auth.signInWithEmailAndPassword(e, p)
+                .catch(error => {
+                    btn.innerText = "INGRESAR AL SISTEMA";
+                    btn.disabled = false;
+                    let msg = "Error de acceso.";
+                    if(error.code === 'auth/wrong-password') msg = "Contraseña incorrecta.";
+                    if(error.code === 'auth/user-not-found') msg = "Usuario no registrado.";
+                    err.innerText = msg;
+                    err.style.display = 'block';
+                });
         }
 
         // 5. ESTA ES LA FUNCIÓN PROTEGIDA (Aquí metimos tus conexiones viejas)
@@ -1288,6 +1300,7 @@ window.nav = function(v, e) {
 };
     </script>
 </body>
+
 
 
 
