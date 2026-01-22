@@ -286,7 +286,21 @@
 </head>
 
 <body>
-
+<!-- LOGIN OVERLAY (SEGURIDAD) -->
+    <div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--dark); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white;">
+        <div style="background:white; padding:5px; border-radius:50%; margin-bottom:20px;">
+            <img id="loginLogo" src="https://placehold.co/100?text=WS" style="width:90px; height:90px; border-radius:50%; object-fit:contain; border:2px solid #eee;">
+        </div>
+        <h2 style="margin:0 0 5px 0; text-transform:uppercase; letter-spacing:2px; text-align:center;">Acceso Restringido</h2>
+        <p style="color:#aaa; margin-bottom:30px; font-size:0.9rem;">Sistema Privado World Store</p>
+        
+        <div style="background:white; padding:30px; border-radius:16px; width:320px; max-width:90%; color:#333; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.5);">
+            <input type="email" id="txtEmail" placeholder="Correo Administrativo" style="margin-bottom:15px; border:1px solid #ddd; background:#f9f9f9; width:100%; padding:12px; border-radius:8px;">
+            <input type="password" id="txtPass" placeholder="Contraseña" style="margin-bottom:20px; border:1px solid #ddd; background:#f9f9f9; width:100%; padding:12px; border-radius:8px;">
+            <button class="btn btn-primary" onclick="appLogin()" id="btnLogin" style="width:100%; font-size:1rem;">INGRESAR</button>
+            <p id="loginError" style="color:#d32f2f; font-size:0.8rem; margin-top:15px; display:none; font-weight:bold;"></p>
+        </div>
+    </div>
     <div id="loader">
         <div class="spinner"></div>
         <p style="margin-top:15px; color:#555; font-weight:bold;">Sincronizando Sistema...</p>
@@ -544,9 +558,11 @@
     <!-- SCRIPT -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
     <script>
         // --- CONFIGURACIÓN DE FIREBASE (Mantenida intacta) ---
+      // 1. CONFIGURACIÓN
         const firebaseConfig = {
             apiKey: "AIzaSyB5ygJIoEgpJPKY0qMULocohmzXGc7UWFE",
             authDomain: "worldstoresystem.firebaseapp.com",
@@ -558,24 +574,82 @@
             measurementId: "G-9NQMR0XVHT"
         };
 
-        try {
-            firebase.initializeApp(firebaseConfig);
-        } catch(e) { console.error(e); }
-
+        try { firebase.initializeApp(firebaseConfig); } catch(e) { console.error(e); }
+        
         const dbRef = firebase.database();
+        const auth = firebase.auth(); // NUEVO: Inicializar Auth
+
+        // 2. VARIABLES GLOBALES
         let db=[], history=[], config={name:"WORLD STORE", sub:"ARIANA & GABRIEL", color:"#C62828", currency:"$", tel:"0424-7125937", footer:"Gracias por su compra"};
         let cart=[], curFilter='all', saleItem=null, saleMode='doc';
 
-        // CONEXIONES
-        dbRef.ref('inventory').on('value', s => { 
-            db = s.val() || []; 
-            if(!s.val()) saveInitialData(); 
-            // CAMBIO: Se usa la funcion unificada
-            window.updateAllViews(); 
-            document.getElementById('loader').style.display='none'; 
+        // 3. BASE DE DATOS DE GANANCIAS (Tu lista del PDF)
+        const PROFIT_DB = { "HY 001": 5.5, "HY 002-1": 5.5, "HY 002-3": 5.5, "HY 003-1": 5.5, "HY 006-1": 5.5, "LC C-04": 6.5, "HY 007": 5.5, "HY 009-1": 5.5, "HY 009-2": 5.5, "HY 010": 5.5, "HY 011-1": 5.5, "HY 011-2": 5.5, "LC 05": 5.5, "HY 013": 5.5, "LC 07-1": 5.5, "HY 015": 5.5, "HY 015-1": 5.5, "HY 016": 5.5, "HY 016-1": 5.5, "HY 017-1": 5.5, "HY 017-2": 5.5, "HY 018-1": 5.5, "HY 018-2": 5.5, "HY 019": 5.5, "HY 020-1": 6.5, "LC LB 03": 7.5, "HY 020-3": 5.5, "LC PW33": 6.5, "HY 020-5": 5.5, "HY 021-1": 5.5, "HY 022-1": 5.5, "LC W15": 5.5, "HY 026-1": 5.5, "HY 027": 7.5, "LC W72-3": 6.5, "HY 028-4": 5.5, "HY 029-1": 10.5, "HY 030-3": 5.5, "HY 031-4": 10.5, "HY 032": 5.5, "HY 032-1": 5.5, "HY 033": 5.5, "HY 035": 5.5, "HY 037-1": 5.5, "HY 038-1": 6.5, "HY 038-2": 6.5, "HY 039-1": 6.5, "HY 040-1": 5.5, "HY 040-2": 5.5, "HY 040-3": 5.5, "HY 040-4": 5.5, "HY 040-6": 5.5, "HY 042": 5.5, "HY 045": 5.5, "HY 046-1": 5.5, "HY 047-1": 4.0, "HY 047-2": 5.5, "HY 047-3": 5.5, "HY 048-1": 5.5, "HY 048-2": 5.5, "HY 049": 5.5, "HY 049-1": 11.5, "HY 055-4": 6.5, "HY 055-5": 6.5, "HY 055-6": 6.5, "HY 055-7": 6.5, "HY 056": 5.5, "HY 058-1": 5.5, "HY 060": 6.5, "HY 060-3": 5.5, "HY 060-1": 5.5, "HY 061-1": 5.5, "HY 062": 5.5, "HY 066": 5.5, "HY 066-1": 5.5, "HY 066-2": 8.5, "HY 067-3": 5.5, "HY 068": 5.5, "HY 076": 5.5, "HY 077": 5.5, "LC LA 08": 5.5, "LC A-2402": 5.5, "LC A-2402D": 5.5, "LC A-2403": 6.5, "LC AM14-1": 5.5, "LC B-2426-1": 5.5, "LC B-2426": 5.5, "LC C-02-1": 9.5, "LC C-02": 9.5, "LC C-09D": 5.5, "LC C-09": 5.5, "LC C-55-1": 7.5, "LC C-55": 7.5, "LC D-08-1": 5.5, "LC D-08": 5.5, "LC D-55-1": 7.5, "LC D-55": 7.5, "LC M14-2": 5.5, "LC M-15D": 5.5, "LC M-75": 6.5, "LC M-76": 5.5, "LC M-99-1": 8.5, "LC W-801": 6.5, "LC W-99-1": 8.5, "LC W-99": 7.5, "G 008B": 5.5, "G 148": 6.5, "RS 101": 8.5, "RS 102": 8.9, "RS 103": 8.5, "RS 105": 8.5, "RS 106": 15.5, "RS 107": 8.3, "RS 108": 9.5, "RS 109": 8.7, "RS 110": 16.1, "RS 111": 11.5, "RS 112": 5.5, "RS 113": 7.5, "RS 115": 6.5, "LC 01": 5.5, "RS 118": 6.5, "RS 119": 7.5, "RS 121": 8.5, "RS 123": 10.5, "RS 125": 11.5, "LC W-06": 5.5, "RS 133": 5.5, "RS 202": 9.5, "RS A1": 5.5, "RS A2": 5.7, "RS A2-1": 5.5, "RS A3": 5.9, "LC B2404": 6.5, "RS A7": 9.5, "RS A8": 9.3, "RS A9": 8.5, "RS A10": 8.0, "LO 020": 5.5, "LO 078-5": 5.5, "LO 043": 5.5, "SM 99-1": 10.5, "SM 99-3": 10.5, "SM 99-4": 10.5, "SM 99-5": 10.5, "SM 99-8": 10.5, "M-15": 9.5, "LO 024": 7.5 };
+
+        // 4. NUEVA LÓGICA DE LOGIN Y ARRANQUE
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // Si el usuario existe, escondemos login y arrancamos sistema
+                document.getElementById('loginOverlay').style.display = 'none';
+                startSystem(); 
+                // Mensaje pequeño de éxito
+                const d=document.createElement('div');d.className='toast success';d.innerHTML='<i class="fa-solid fa-check"></i> Bienvenido';document.getElementById('toast-container').appendChild(d);setTimeout(()=>d.remove(),3000);
+            } else {
+                // Si no, mostramos pantalla negra
+                document.getElementById('loginOverlay').style.display = 'flex';
+                // Recuperar logo local si existe para el login
+                const savedLogo = localStorage.getItem('localLogo');
+                if(savedLogo) {
+                    document.getElementById('loginLogo').src = savedLogo;
+                    document.getElementById('loginLogo').style.display = 'block';
+                }
+            }
         });
-        dbRef.ref('history').on('value', s => { history = s.val() ? Object.values(s.val()).sort((a,b)=>b.id-a.id) : []; renderHistory(); });
-        dbRef.ref('config').on('value', s => { if(s.val()){ config=s.val(); applyConfig(); window.updateAllViews(); } else { saveConfig(); } });
+
+        // Esta es la función que llama el botón "INGRESAR"
+        window.appLogin = function() {
+            const e = document.getElementById('txtEmail').value;
+            const p = document.getElementById('txtPass').value;
+            const btn = document.getElementById('btnLogin');
+            const err = document.getElementById('loginError');
+
+            if(!e || !p) { err.innerText = "Faltan datos."; err.style.display = 'block'; return; }
+
+            btn.innerText = "Verificando..."; btn.disabled = true; err.style.display = 'none';
+
+            auth.signInWithEmailAndPassword(e, p).catch(error => {
+                btn.innerText = "INGRESAR"; btn.disabled = false;
+                err.innerText = "Datos incorrectos."; err.style.display = 'block';
+            });
+        }
+
+        // 5. ESTA ES LA FUNCIÓN PROTEGIDA (Aquí metimos tus conexiones viejas)
+        function startSystem() {
+            // Solo se ejecuta si el login es correcto
+            dbRef.ref('config').on('value', s => { 
+                if(s.val()){ 
+                    config=s.val(); 
+                    applyConfig(); 
+                    // Guardamos el logo en local para mostrarlo en el login futuro
+                    if(config.logo) localStorage.setItem('localLogo', config.logo);
+                    window.updateAllViews(); 
+                } else { saveConfig(); } 
+            });
+
+            dbRef.ref('inventory').on('value', s => { 
+                db = s.val() || []; 
+                if(!s.val()) saveInitialData(); 
+                window.updateAllViews(); 
+                document.getElementById('loader').style.display='none'; 
+            });
+
+            dbRef.ref('history').on('value', s => { 
+                history = s.val() ? Object.values(s.val()).sort((a,b)=>b.id-a.id) : []; 
+                renderHistory(); 
+                // Actualizar ganancias si estamos en esa vista
+                if(document.getElementById('view-profit') && document.getElementById('view-profit').classList.contains('active')) renderProfit(); 
+            });
+        }
 
         // --- OPTIMIZACIÓN DE BÚSQUEDA (Debounce) ---
         let searchTimer;
@@ -1214,6 +1288,7 @@ window.nav = function(v, e) {
 };
     </script>
 </body>
+
 
 
 
