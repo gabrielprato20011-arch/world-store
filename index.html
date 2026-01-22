@@ -544,7 +544,6 @@
     <!-- SCRIPT -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
     <script>
         // --- CONFIGURACIÓN DE FIREBASE (Mantenida intacta) ---
@@ -564,46 +563,6 @@
         } catch(e) { console.error(e); }
 
         const dbRef = firebase.database();
-        const auth = firebase.auth();
- auth.onAuthStateChanged(user => {
-            if (user) {
-                // SI ESTÁ LOGUEADO:
-                document.getElementById('loginOverlay').style.display = 'none'; // Quitar pantalla negra
-                startSystem(); // Iniciar descarga de datos
-                Toast.show("Bienvenido de nuevo");
-            } else {
-                // SI NO ESTÁ LOGUEADO:
-                document.getElementById('loginOverlay').style.display = 'flex'; // Poner pantalla negra
-                // Intentamos mostrar el logo si existe en config local
-                const savedLogo = localStorage.getItem('localLogo');
-                if(savedLogo) {
-                    document.getElementById('loginLogo').src = savedLogo;
-                    document.getElementById('loginLogo').style.display = 'block';
-                }
-            }
-        });
-
-        window.appLogin = function() {
-            const e = document.getElementById('txtEmail').value;
-            const p = document.getElementById('txtPass').value;
-            const btn = document.getElementById('btnLogin');
-            const err = document.getElementById('loginError');
-
-            btn.innerText = "Verificando...";
-            btn.disabled = true;
-            err.style.display = 'none';
-
-            auth.signInWithEmailAndPassword(e, p)
-                .catch(error => {
-                    btn.innerText = "INGRESAR AL SISTEMA";
-                    btn.disabled = false;
-                    err.innerText = "Error: Datos incorrectos o sin acceso.";
-                    err.style.display = 'block';
-                    console.error(error);
-                });
-        }
-
-        
         let db=[], history=[], config={name:"WORLD STORE", sub:"ARIANA & GABRIEL", color:"#C62828", currency:"$", tel:"0424-7125937", footer:"Gracias por su compra"};
         let cart=[], curFilter='all', saleItem=null, saleMode='doc';
 
@@ -615,31 +574,8 @@
             window.updateAllViews(); 
             document.getElementById('loader').style.display='none'; 
         });
-         function startSystem() {
         dbRef.ref('history').on('value', s => { history = s.val() ? Object.values(s.val()).sort((a,b)=>b.id-a.id) : []; renderHistory(); });
         dbRef.ref('config').on('value', s => { if(s.val()){ config=s.val(); applyConfig(); window.updateAllViews(); } else { saveConfig(); } });
-             dbRef.ref('config').on('value', s => { 
-                if(s.val()){ 
-                    config=s.val(); 
-                    applyConfig(); 
-                    if(config.logo) localStorage.setItem('localLogo', config.logo); // Guardar logo para login
-                    window.updateAllViews(); 
-                } else { saveConfig(); } 
-            });
-
-            dbRef.ref('inventory').on('value', s => { 
-                db = s.val() || []; 
-                if(!s.val()) saveInitialData(); 
-                window.updateAllViews(); 
-                document.getElementById('loader').style.display='none'; 
-            });
-
-            dbRef.ref('history').on('value', s => { 
-                history = s.val() ? Object.values(s.val()).sort((a,b)=>b.id-a.id) : []; 
-                renderHistory();
-                if(window.renderProfit) renderProfit(); // Actualizar ganancias si existe
-            });
-         }
 
         // --- OPTIMIZACIÓN DE BÚSQUEDA (Debounce) ---
         let searchTimer;
@@ -1278,7 +1214,8 @@ window.nav = function(v, e) {
 };
     </script>
 </body>
-</html>
+
+
 
 
 
