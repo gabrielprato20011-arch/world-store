@@ -535,537 +535,543 @@
         </div>
     </div>
 
-    <!-- FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
-    <script>
-        // --- 1. CONFIGURACIÓN FIREBASE ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyB5ygJIoEgpJPKY0qMULocohmzXGc7UWFE",
-            authDomain: "worldstoresystem.firebaseapp.com",
-            databaseURL: "https://worldstoresystem-default-rtdb.firebaseio.com",
-            projectId: "worldstoresystem",
-            storageBucket: "worldstoresystem.firebasestorage.app",
-            messagingSenderId: "460628958914",
-            appId: "1:460628958914:web:95da76852bedecbdcf255b"
-        };
-        try { firebase.initializeApp(firebaseConfig); } catch(e) { console.error("Error init firebase", e); }
-        
-        const dbRef = firebase.database();
-        const auth = firebase.auth();
+<script>
+    // --- 1. CONFIGURACIÓN FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyB5ygJIoEgpJPKY0qMULocohmzXGc7UWFE",
+        authDomain: "worldstoresystem.firebaseapp.com",
+        databaseURL: "https://worldstoresystem-default-rtdb.firebaseio.com",
+        projectId: "worldstoresystem",
+        storageBucket: "worldstoresystem.firebasestorage.app",
+        messagingSenderId: "460628958914",
+        appId: "1:460628958914:web:95da76852bedecbdcf255b"
+    };
+    try { firebase.initializeApp(firebaseConfig); } catch(e) { console.error("Error init firebase", e); }
+    
+    const dbRef = firebase.database();
+    const auth = firebase.auth();
 
-        // --- 2. VARIABLES GLOBALES ---
-        let db = [], history = [];
-        let config = {
-            name: "WORLD STORE", 
-            sub: "Gestión Segura", 
-            color: "#D32F2F", 
-            currency: "$", 
-            tel: "0424-7125937", 
-            footer: "Gracias por su compra"
-        };
-        let cart = [], curFilter = 'all', saleItem = null, saleMode = 'doc';
-        
-        // TABLA GANANCIAS POR DEFECTO (Local fallback)
-        const PROFIT_DB_LOCAL = { "HY 001": 5.5, "HY 002-1": 5.5, "HY 002-3": 5.5, "LC C-04": 6.5 }; // (Simplificada, leerá cloud)
-        let PROFIT_DB = PROFIT_DB_LOCAL;
+    // --- 2. VARIABLES GLOBALES ---
+    let db = [], history = [];
+    let config = {
+        name: "WORLD STORE", 
+        sub: "Gestión Segura", 
+        color: "#D32F2F", 
+        currency: "$", 
+        tel: "0424-7125937", 
+        footer: "Gracias por su compra"
+    };
+    let cart = [], curFilter = 'all', saleItem = null, saleMode = 'doc';
+    
+    // TABLA GANANCIAS POR DEFECTO
+    const PROFIT_DB_LOCAL = { "HY 001": 5.5, "HY 002-1": 5.5, "HY 002-3": 5.5, "LC C-04": 6.5 }; 
+    let PROFIT_DB = PROFIT_DB_LOCAL;
 
-        // --- 3. AUTENTICACIÓN Y ARRANQUE ---
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                startSystem(); 
-                Toast.show("Sistema Conectado y Seguro");
-            } else {
-                document.getElementById('loginOverlay').style.display = 'flex';
-                const savedLogo = localStorage.getItem('localLogo');
-                if(savedLogo) {
-                    document.getElementById('loginLogo').src = savedLogo;
-                    document.getElementById('loginLogo').style.display = 'block';
-                }
+    // --- 3. AUTENTICACIÓN Y ARRANQUE ---
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            startSystem(); 
+            Toast.show("Sistema Conectado y Seguro");
+        } else {
+            document.getElementById('loginOverlay').style.display = 'flex';
+            const savedLogo = localStorage.getItem('localLogo');
+            if(savedLogo) {
+                document.getElementById('loginLogo').src = savedLogo;
+                document.getElementById('loginLogo').style.display = 'block';
             }
+        }
+    });
+
+    window.appLogin = function() {
+        const e = document.getElementById('txtEmail').value;
+        const p = document.getElementById('txtPass').value;
+        const btn = document.getElementById('btnLogin');
+        const err = document.getElementById('loginError');
+
+        if(!e || !p) { err.innerText = "Faltan datos."; err.style.display = 'block'; return; }
+        btn.innerText = "Verificando..."; btn.disabled = true; err.style.display = 'none';
+
+        auth.signInWithEmailAndPassword(e, p).catch(error => {
+            btn.innerText = "INGRESAR"; btn.disabled = false;
+            let msg = "Error de acceso.";
+            if(error.code === 'auth/wrong-password') msg = "Contraseña inválida.";
+            if(error.code === 'auth/user-not-found') msg = "Usuario no existe.";
+            err.innerText = msg; err.style.display = 'block';
+        });
+    }
+
+    // --- 4. CORE: GESTIÓN DE DATOS ---
+    function startSystem() {
+        // A. Config
+        dbRef.ref('config').on('value', s => { 
+            if(s.val()){ 
+                config = s.val(); 
+                applyConfig(); 
+                if(config.logo) localStorage.setItem('localLogo', config.logo);
+            } else { saveConfig(); } 
         });
 
-        window.appLogin = function() {
-            const e = document.getElementById('txtEmail').value;
-            const p = document.getElementById('txtPass').value;
-            const btn = document.getElementById('btnLogin');
-            const err = document.getElementById('loginError');
+        // B. Inventario
+        dbRef.ref('inventory').once('value').then(s => {
+            db = s.val() || [];
+            window.updateAllViews();
+            document.getElementById('loader').style.display = 'none';
 
-            if(!e || !p) { err.innerText = "Faltan datos."; err.style.display = 'block'; return; }
-            btn.innerText = "Verificando..."; btn.disabled = true; err.style.display = 'none';
-
-            auth.signInWithEmailAndPassword(e, p).catch(error => {
-                btn.innerText = "INGRESAR"; btn.disabled = false;
-                let msg = "Error de acceso.";
-                if(error.code === 'auth/wrong-password') msg = "Contraseña inválida.";
-                if(error.code === 'auth/user-not-found') msg = "Usuario no existe.";
-                err.innerText = msg; err.style.display = 'block';
-            });
-        }
-
-        // --- 4. CORE: GESTIÓN DE DATOS (ARQUITECTURA) ---
-        function startSystem() {
-            // A. Cargar Configuración (1 vez)
-            dbRef.ref('config').on('value', s => { 
-                if(s.val()){ 
-                    config = s.val(); 
-                    applyConfig(); 
-                    if(config.logo) localStorage.setItem('localLogo', config.logo);
-                } else { saveConfig(); } 
+            dbRef.ref('inventory').on('child_changed', snap => {
+                const idx = snap.key;
+                if(db[idx]) { db[idx] = snap.val(); window.updateAllViews(); }
             });
 
-            // B. Cargar Inventario (OPTIMIZADO: Listeners granulares en vez de todo el JSON)
-            dbRef.ref('inventory').once('value').then(s => {
-                db = s.val() || [];
+            dbRef.ref('inventory').on('child_added', snap => {
+                const val = snap.val();
+                if(!db.find(x => x.id === val.id)) { db.push(val); window.updateAllViews(); }
+            });
+
+            dbRef.ref('inventory').on('child_removed', snap => {
+                const val = snap.val();
+                db = db.filter(x => x.id !== val.id);
                 window.updateAllViews();
-                document.getElementById('loader').style.display = 'none';
-
-                // Escuchar CAMBIOS parciales (Evita recargar 5MB)
-                dbRef.ref('inventory').on('child_changed', snap => {
-                    const idx = snap.key; // índice array
-                    if(db[idx]) { db[idx] = snap.val(); window.updateAllViews(); }
-                });
-
-                // Escuchar NUEVOS
-                dbRef.ref('inventory').on('child_added', snap => {
-                    const val = snap.val();
-                    if(!db.find(x => x.id === val.id)) { db.push(val); window.updateAllViews(); }
-                });
-
-                 // Escuchar ELIMINACIONES
-                dbRef.ref('inventory').on('child_removed', snap => {
-                    const val = snap.val();
-                    db = db.filter(x => x.id !== val.id);
-                    window.updateAllViews();
-                });
             });
+        });
 
-            // C. Historial (Paginado, Últimos 100)
-            dbRef.ref('history').limitToLast(100).on('value', s => { 
-                history = s.val() ? Object.values(s.val()).sort((a,b) => b.id - a.id) : []; 
-                renderHistory();
-                if(document.getElementById('view-profit').classList.contains('active')) renderProfit();
-            });
+        // C. Historial COMPLETO (Corregido: Se quitó el limitToLast para traer todo)
+        dbRef.ref('history').on('value', s => { 
+            history = s.val() ? Object.values(s.val()).sort((a,b) => b.id - a.id) : []; 
+            renderHistory();
+            if(document.getElementById('view-profit').classList.contains('active')) renderProfit();
+        });
+    }
+
+    // --- 5. RENDERIZADO Y UI ---
+    let searchTimer;
+    window.searchDelay = function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => { window.updateAllViews(); }, 300);
+    }
+
+    window.updateAllViews = function() {
+        renderPOS();
+        renderInv();
+    }
+
+    function renderPOS(){
+        if(config.maintenance){ 
+            document.getElementById('posGrid').innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:50px;"><i class="fa-solid fa-store-slash" style="font-size:3rem;color:#ccc;"></i><h3>En Mantenimiento</h3></div>`; return;
         }
 
-        // --- 5. RENDERIZADO Y UI ---
-        let searchTimer;
-        window.searchDelay = function() {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(() => { window.updateAllViews(); }, 300);
-        }
+        const g = document.getElementById('posGrid'); 
+        const txt = document.getElementById('searchInput').value.toLowerCase();
+        
+        const list = db.filter(p => (p.c.toLowerCase().includes(txt)||p.m.toLowerCase().includes(txt)) && (curFilter==='all'||p.cat===curFilter));
+        list.sort((a, b) => a.cat.localeCompare(b.cat));
 
-        window.updateAllViews = function() {
-            renderPOS();
-            renderInv();
-        }
+        if(list.length === 0){ g.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#999;margin-top:20px;">Sin resultados.</p>`; return; }
 
-        function renderPOS(){
-            if(config.maintenance){ 
-                document.getElementById('posGrid').innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:50px;"><i class="fa-solid fa-store-slash" style="font-size:3rem;color:#ccc;"></i><h3>En Mantenimiento</h3></div>`; return;
+        let html = "";
+        list.forEach(p => {
+            const bg = p.cat === 'Dama' ? '#E91E63' : (p.cat === 'Caballero' ? '#546E7A' : '#FF9800');
+            html += `
+            <div class="card" onclick="openSale(${p.id})">
+                <div class="card-img-wrap">
+                    <img src="${p.img||'https://placehold.co/300?text=' + p.c}" loading="lazy">
+                    <span class="badge-cat" style="background:${bg}">${p.cat.substring(0,3)}</span>
+                </div>
+                <div class="card-content">
+                    <div><h4>${p.c}</h4><p>${p.m}</p></div>
+                    <div class="card-footer">
+                        <span class="stock" style="background:${p.stock < 12 ? '#ffcdd2' : '#E8F5E9'}; color:${p.stock < 12 ? '#c62828' : '#2E7D32'}">
+                            ${p.stock < 12 ? 'Bajo Stock:' : 'Stock:'} ${p.stock}
+                        </span>
+                        <span class="price">${config.currency}${p.d} <small>/doc</small></span>
+                    </div>
+                </div>
+            </div>`;
+        });
+        g.innerHTML = html;
+    }
+
+    function renderInv(){ 
+        const t = document.getElementById('invBody'); t.innerHTML="";
+        const txt = document.getElementById('searchInput').value.toLowerCase();
+        const list = db.filter(p => (p.c.toLowerCase().includes(txt) || p.m.toLowerCase().includes(txt)) && (curFilter === 'all' || p.cat === curFilter));
+
+        list.forEach(p => { 
+            t.innerHTML += `<tr>
+                <td><img src="${p.img || 'https://placehold.co/50'}" class="thumb"></td>
+                <td><b>${p.c}</b> <small>(${p.cat})</small><br>${p.m}</td>
+                <td>${config.currency}${p.d}</td>
+                <td><b>${p.stock}</b></td>
+                <td>
+                    <button class="btn" style="background:#eee;color:#333;width:auto;padding:5px;" onclick="openEdit(${p.id})"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn" style="background:var(--primary);color:white;width:auto;padding:5px;" onclick="delProd(${p.id})"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>`
+        });
+    }
+
+    // --- 6. PROCESAMIENTO DE VENTAS ---
+    window.openSale = function(id){ 
+        saleItem = db.find(x => x.id == id); 
+        if(!saleItem) return;
+        document.getElementById('saleTitle').innerText = `${saleItem.c} - ${saleItem.m}`; 
+        document.getElementById('saleId').value = id; 
+        document.getElementById('saleQty').value = 1; 
+        window.setSaleType('doc'); 
+        document.getElementById('modalSale').style.display = 'flex'; 
+    }
+
+    window.setSaleType = function(t){ 
+        saleMode = t; 
+        ['doc','half','unit'].forEach(x => {
+            const el = document.getElementById('btn-'+x);
+            el.style.background = x === t ? config.color : '#eee';
+            el.style.color = x === t ? 'white' : '#333';
+        }); 
+        updateCalc(); 
+    }
+
+    window.updateCalc = function(){ 
+        const q = parseInt(document.getElementById('saleQty').value)||1; 
+        let p = 0;
+        if(saleMode === 'doc') p = saleItem.d; 
+        else if(saleMode === 'half') p = saleItem.d / 2; 
+        else p = saleItem.d / 12; 
+
+        document.getElementById('unitPriceDisplay').innerText = `Unitario: ${config.currency}${p.toFixed(2)}`; 
+        document.getElementById('saleTotalCalc').innerText = `${config.currency}${(p*q).toFixed(2)}`; 
+    }
+
+    window.adjQty = (n) => { let v = parseInt(document.getElementById('saleQty').value)+n; if(v<1)v=1; document.getElementById('saleQty').value = v; updateCalc(); }
+
+    window.confirmAdd = function() {
+        const q = parseInt(document.getElementById('saleQty').value);
+        let deduct = (saleMode === 'doc' ? 12 : (saleMode === 'half' ? 6 : 1)) * q;
+
+        const inCart = cart.filter(i => i.pId === saleItem.id).reduce((s, i) => s + i.deduct, 0);
+        if((deduct + inCart) > saleItem.stock) { return alert("⚠️ Stock insuficiente en local."); }
+
+        const t = parseFloat(document.getElementById('saleTotalCalc').innerText.replace(/[^0-9.]/g, ''));
+        const typeLabel = saleMode === 'doc' ? 'Doc' : (saleMode === 'half' ? 'Med' : 'Par');
+
+        cart.push({ pId: saleItem.id, c: saleItem.c, m: saleItem.m, qtyTxt: `${q} ${typeLabel}`, total: t, deduct: deduct });
+        
+        closeModal('modalSale');
+        renderCart(); toggleCart();
+        Toast.show("Agregado al pedido");
+    }
+
+    window.processSale = function() {
+        if(cart.length === 0) return alert("Carrito vacío");
+        const nm = document.getElementById('cartClientName').value.trim();
+        if(!nm) return alert("Falta nombre del cliente");
+        
+        const btn = document.getElementById('btnProcessSale');
+        btn.innerText = "Validando Stock..."; btn.disabled = true;
+
+        const invRef = dbRef.ref('inventory');
+
+        invRef.transaction((currInv) => {
+            if(!currInv) return currInv;
+
+            for(let item of cart) {
+                const idx = currInv.findIndex(p => p.id === item.pId);
+                if(idx === -1) throw "Prod no encontrado (borrado?)"; 
+                
+                const prod = currInv[idx];
+                if(prod.stock < item.deduct) throw `Stock insuficiente: ${prod.c}`;
+
+                prod.stock -= item.deduct;
+                currInv[idx] = prod;
             }
-
-            const g = document.getElementById('posGrid'); 
-            const txt = document.getElementById('searchInput').value.toLowerCase();
+            return currInv;
+        }, (err, committed, snap) => {
+            btn.disabled = false; btn.innerText = "CONFIRMAR VENTA";
             
-            // Filtrado Local
-            const list = db.filter(p => (p.c.toLowerCase().includes(txt)||p.m.toLowerCase().includes(txt)) && (curFilter==='all'||p.cat===curFilter));
-            list.sort((a, b) => a.cat.localeCompare(b.cat)); // Orden Categoría
+            if(err) {
+                console.error(err);
+                alert("❌ ERROR: " + err.message || err);
+            } else if(committed) {
+                let totalVenta = 0, descStr = "";
+                cart.forEach(i => { totalVenta += i.total; descStr += `${i.qtyTxt} ${i.c}, `; });
 
-            if(list.length === 0){ g.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#999;margin-top:20px;">Sin resultados.</p>`; return; }
+                const rec = {
+                    id: Date.now(),
+                    date: new Date().toLocaleString(),
+                    client: nm,
+                    phone: document.getElementById('cartClientPhone').value,
+                    total: totalVenta,
+                    items: cart,
+                    desc: descStr
+                };
 
-            let html = "";
-            list.forEach(p => {
-                const bg = p.cat === 'Dama' ? '#E91E63' : (p.cat === 'Caballero' ? '#546E7A' : '#FF9800');
-                // Uso lazy loading real en img
-                html += `
-                <div class="card" onclick="openSale(${p.id})">
-                    <div class="card-img-wrap">
-                        <img src="${p.img||'https://placehold.co/300?text=' + p.c}" loading="lazy">
-                        <span class="badge-cat" style="background:${bg}">${p.cat.substring(0,3)}</span>
-                    </div>
-                    <div class="card-content">
-                        <div><h4>${p.c}</h4><p>${p.m}</p></div>
-                        <div class="card-footer">
-                            <span class="stock" style="background:${p.stock < 12 ? '#ffcdd2' : '#E8F5E9'}; color:${p.stock < 12 ? '#c62828' : '#2E7D32'}">
-                                ${p.stock < 12 ? 'Bajo Stock:' : 'Stock:'} ${p.stock}
-                            </span>
-                            <span class="price">${config.currency}${p.d} <small>/doc</small></span>
-                        </div>
-                    </div>
-                </div>`;
-            });
-            g.innerHTML = html;
-        }
+                dbRef.ref('history').push(rec);
+                printFromData(rec);
+                cart = []; document.getElementById('cartClientName').value = "";
+                renderCart(); toggleCart();
+                Toast.show("Venta Exitosa", "success");
+            }
+        });
+    }
 
-        function renderInv(){ 
-            const t = document.getElementById('invBody'); t.innerHTML="";
-            const txt = document.getElementById('searchInput').value.toLowerCase();
-            const list = db.filter(p => (p.c.toLowerCase().includes(txt) || p.m.toLowerCase().includes(txt)) && (curFilter === 'all' || p.cat === curFilter));
+    function renderCart(){ 
+        const c = document.getElementById('cartContainer'); c.innerHTML=""; let t=0;
+        if(cart.length==0) c.innerHTML="<div style='text-align:center;color:#999;padding:20px;'>Vacío</div>"; 
+        cart.forEach((i,x)=>{
+            t+=i.total;
+            c.innerHTML+=`<div class="c-item">
+                <div style="flex:1"><b>${i.c}</b><br><small>${i.qtyTxt}</small></div>
+                <div style="text-align:right"><b>${config.currency}${i.total.toFixed(2)}</b><br>
+                <small style="color:#d32f2f;cursor:pointer" onclick="cart.splice(${x},1);renderCart()">Eliminar</small></div>
+            </div>`
+        });
+        document.getElementById('cartTotalDisplay').innerText=`${config.currency}${t.toFixed(2)}`;
+        document.getElementById('cartCountBadge').innerText=cart.length;
+    }
 
-            list.forEach(p => { 
-                t.innerHTML += `<tr>
-                    <td><img src="${p.img || 'https://placehold.co/50'}" class="thumb"></td>
-                    <td><b>${p.c}</b> <small>(${p.cat})</small><br>${p.m}</td>
-                    <td>${config.currency}${p.d}</td>
-                    <td><b>${p.stock}</b></td>
-                    <td>
-                        <button class="btn" style="background:#eee;color:#333;width:auto;padding:5px;" onclick="openEdit(${p.id})"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn" style="background:var(--primary);color:white;width:auto;padding:5px;" onclick="delProd(${p.id})"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>`
-            });
-        }
+    // --- 7. HISTORIAL & PROFIT (TOTALES) ---
+    function renderHistory() {
+        const t = document.getElementById('histBody'); t.innerHTML = "";
+        const c = config.currency;
+        
+        history.forEach(h => {
+            t.innerHTML += `
+            <tr>
+                <td><small>${h.date.split(',')[0]}</small></td>
+                <td><b>${h.client}</b></td>
+                <td><button class="btn" style="padding:2px 8px; font-size:0.7rem; background:#f0f0f0; color:#555; width:auto; height:auto;" onclick="alert('${h.desc}')">Ver</button></td>
+                <td><b>${c}${parseFloat(h.total).toFixed(2)}</b></td>
+                <td>
+                    <i class="fa-solid fa-print" style="color:#1976D2;margin-right:10px;cursor:pointer" onclick="reprint(${h.id})"></i> 
+                    <i class="fa-solid fa-rotate-left" style="color:#d32f2f;cursor:pointer" onclick="delHist(${h.id})" title="Devolver Venta"></i>
+                </td>
+            </tr>`;
+        });
+    }
 
-        // --- 6. PROCESAMIENTO DE VENTAS BLINDADO (ATÓMICO) ---
-        window.openSale = function(id){ 
-            saleItem = db.find(x => x.id == id); 
-            if(!saleItem) return;
-            document.getElementById('saleTitle').innerText = `${saleItem.c} - ${saleItem.m}`; 
-            document.getElementById('saleId').value = id; 
-            document.getElementById('saleQty').value = 1; 
-            window.setSaleType('doc'); 
-            document.getElementById('modalSale').style.display = 'flex'; 
-        }
+    window.delHist = function(id) {
+        if(!confirm("⚠️ ¿ANULAR VENTA?\nEl stock regresará automáticamente al inventario.")) return;
 
-        window.setSaleType = function(t){ 
-            saleMode = t; 
-            ['doc','half','unit'].forEach(x => {
-                const el = document.getElementById('btn-'+x);
-                el.style.background = x === t ? config.color : '#eee';
-                el.style.color = x === t ? 'white' : '#333';
-            }); 
-            updateCalc(); 
-        }
-
-        window.updateCalc = function(){ 
-            const q = parseInt(document.getElementById('saleQty').value)||1; 
-            let p = 0;
-            if(saleMode === 'doc') p = saleItem.d; 
-            else if(saleMode === 'half') p = saleItem.d / 2; 
-            else p = saleItem.d / 12; 
-
-            document.getElementById('unitPriceDisplay').innerText = `Unitario: ${config.currency}${p.toFixed(2)}`; 
-            document.getElementById('saleTotalCalc').innerText = `${config.currency}${(p*q).toFixed(2)}`; 
-        }
-
-        window.adjQty = (n) => { let v = parseInt(document.getElementById('saleQty').value)+n; if(v<1)v=1; document.getElementById('saleQty').value = v; updateCalc(); }
-
-        window.confirmAdd = function() {
-            const q = parseInt(document.getElementById('saleQty').value);
-            // Lógica Pares a Descontar
-            let deduct = (saleMode === 'doc' ? 12 : (saleMode === 'half' ? 6 : 1)) * q;
-
-            // PRE-CHECK LOCAL (Para UX rápida, validación real ocurre en servidor al pagar)
-            const inCart = cart.filter(i => i.pId === saleItem.id).reduce((s, i) => s + i.deduct, 0);
-            if((deduct + inCart) > saleItem.stock) { return alert("⚠️ Stock insuficiente en local. (Valida bodega)"); }
-
-            const t = parseFloat(document.getElementById('saleTotalCalc').innerText.replace(/[^0-9.]/g, ''));
-            const typeLabel = saleMode === 'doc' ? 'Doc' : (saleMode === 'half' ? 'Med' : 'Par');
-
-            cart.push({ pId: saleItem.id, c: saleItem.c, m: saleItem.m, qtyTxt: `${q} ${typeLabel}`, total: t, deduct: deduct });
+        dbRef.ref('history').once('value').then(snap => {
+            const hData = snap.val();
+            let key = null, sale = null;
+            for(let k in hData) { if(hData[k].id === id) { key=k; sale=hData[k]; break; }}
             
-            closeModal('modalSale');
-            renderCart(); toggleCart();
-            Toast.show("Agregado al pedido");
-        }
+            if(!sale) return alert("Venta no encontrada");
 
-        // --- CIRUGÍA: processSale CON TRANSACCIÓN ---
-        window.processSale = function() {
-            if(cart.length === 0) return alert("Carrito vacío");
-            const nm = document.getElementById('cartClientName').value.trim();
-            if(!nm) return alert("Falta nombre del cliente");
-            
-            const btn = document.getElementById('btnProcessSale');
-            btn.innerText = "Validando Stock..."; btn.disabled = true;
-
-            const invRef = dbRef.ref('inventory');
-
-            // TRANSACTION: Esto evita colisiones. Ejecuta atomicidad en el servidor.
-            invRef.transaction((currInv) => {
-                if(!currInv) return currInv; // DB no lista aún
-
-                for(let item of cart) {
-                    const idx = currInv.findIndex(p => p.id === item.pId);
-                    if(idx === -1) throw "Prod no encontrado (borrado?)"; // Aborta transacción
-                    
-                    const prod = currInv[idx];
-                    if(prod.stock < item.deduct) throw `Stock insuficiente: ${prod.c}`; // Aborta
-
-                    // Resta Atómica
-                    prod.stock -= item.deduct;
-                    currInv[idx] = prod;
-                }
-                return currInv;
-            }, (err, committed, snap) => {
-                btn.disabled = false; btn.innerText = "CONFIRMAR VENTA";
-                
-                if(err) {
-                    console.error(err);
-                    alert("❌ ERROR EN TRANSACCIÓN:\n" + err.message || err);
-                } else if(committed) {
-                    // ÉXITO: Stock descontado en nube, procedemos a guardar historial
-                    let totalVenta = 0, descStr = "";
-                    cart.forEach(i => { totalVenta += i.total; descStr += `${i.qtyTxt} ${i.c}, `; });
-
-                    const rec = {
-                        id: Date.now(),
-                        date: new Date().toLocaleString(),
-                        client: nm,
-                        phone: document.getElementById('cartClientPhone').value,
-                        total: totalVenta,
-                        items: cart, // Snapshot del carrito
-                        desc: descStr
-                    };
-
-                    dbRef.ref('history').push(rec); // Guardamos la venta
-                    
-                    printFromData(rec);
-                    cart = []; document.getElementById('cartClientName').value = "";
-                    renderCart(); toggleCart();
-                    Toast.show("Venta Exitosa y Segura", "success");
-                }
-            });
-        }
-
-        function renderCart(){ 
-            const c = document.getElementById('cartContainer'); c.innerHTML=""; let t=0;
-            if(cart.length==0) c.innerHTML="<div style='text-align:center;color:#999;padding:20px;'>Vacío</div>"; 
-            cart.forEach((i,x)=>{
-                t+=i.total;
-                c.innerHTML+=`<div class="c-item">
-                    <div style="flex:1"><b>${i.c}</b><br><small>${i.qtyTxt}</small></div>
-                    <div style="text-align:right"><b>${config.currency}${i.total.toFixed(2)}</b><br>
-                    <small style="color:#d32f2f;cursor:pointer" onclick="cart.splice(${x},1);renderCart()">Eliminar</small></div>
-                </div>`
-            });
-            document.getElementById('cartTotalDisplay').innerText=`${config.currency}${t.toFixed(2)}`;
-            document.getElementById('cartCountBadge').innerText=cart.length;
-        }
-
-        // --- 7. HISTORIAL & PROFIT ---
-        function renderHistory() {
-            const t = document.getElementById('histBody'); t.innerHTML = "";
-            const c = config.currency;
-            
-            history.forEach(h => {
-                t.innerHTML += `
-                <tr>
-                    <td><small>${h.date.split(',')[0]}</small></td>
-                    <td><b>${h.client}</b></td>
-                    <td><button class="btn" style="padding:2px 8px; font-size:0.7rem; background:#f0f0f0; color:#555; width:auto; height:auto;" onclick="alert('${h.desc}')">Ver</button></td>
-                    <td><b>${c}${parseFloat(h.total).toFixed(2)}</b></td>
-                    <td>
-                        <i class="fa-solid fa-print" style="color:#1976D2;margin-right:10px;cursor:pointer" onclick="reprint(${h.id})"></i> 
-                        <i class="fa-solid fa-rotate-left" style="color:#d32f2f;cursor:pointer" onclick="delHist(${h.id})" title="Devolver Venta"></i>
-                    </td>
-                </tr>`;
-            });
-        }
-
-        // --- CIRUGÍA: delHist REVERSIBLE ---
-        window.delHist = function(id) {
-            if(!confirm("⚠️ ¿ANULAR VENTA?\nEl stock regresará automáticamente al inventario.")) return;
-
-            // Primero obtener venta para saber qué devolver
-            dbRef.ref('history').once('value').then(snap => {
-                const hData = snap.val();
-                let key = null, sale = null;
-                for(let k in hData) { if(hData[k].id === id) { key=k; sale=hData[k]; break; }}
-                
-                if(!sale) return alert("Venta no encontrada (¿Muy antigua?)");
-
-                // Transacción Atómica de devolución
-                dbRef.ref('inventory').transaction(currInv => {
-                    if(!currInv) return currInv;
-                    sale.items.forEach(soldItem => {
-                        const idx = currInv.findIndex(p => p.id === soldItem.pId);
-                        if(idx !== -1) {
-                            currInv[idx].stock = parseInt(currInv[idx].stock) + parseInt(soldItem.deduct);
-                        }
-                    });
-                    return currInv;
-                }, (err, committed) => {
-                    if(committed) {
-                        // Borramos el historial SOLO si el stock se devolvió exitosamente
-                        dbRef.ref('history/' + key).remove();
-                        Toast.show("Venta Anulada y Stock Devuelto", "success");
-                    } else {
-                        alert("Error devolviendo stock: " + err);
+            dbRef.ref('inventory').transaction(currInv => {
+                if(!currInv) return currInv;
+                sale.items.forEach(soldItem => {
+                    const idx = currInv.findIndex(p => p.id === soldItem.pId);
+                    if(idx !== -1) {
+                        currInv[idx].stock = parseInt(currInv[idx].stock) + parseInt(soldItem.deduct);
                     }
                 });
-            });
-        }
-
-        function renderProfit() {
-            // Se usa PROFIT_DB_LOCAL si no hay nube
-            // Nota: Podríamos agregar dbRef('config/profit') aquí si queremos tabla dinámica real.
-            const t = document.getElementById('profitBody'); t.innerHTML = "";
-            let gT = 0; const c = config.currency;
-
-            // Usamos mapa del catalogo actual para precios actualizados (Opcional, o base estatica)
-            // Se usa history (solo los 100 ultimos para no bloquear)
-            history.forEach(h => {
-                let saleProfit = 0;
-                h.items.forEach(item => {
-                    let code = item.c.trim();
-                    let profitPerDozen = PROFIT_DB[code] || 5.5; // Default 5.5
-                    let itemProfit = (profitPerDozen / 12) * item.deduct; 
-                    saleProfit += itemProfit;
-                });
-                gT += saleProfit;
-                
-                t.innerHTML += `<tr>
-                    <td><small>${h.date.split(',')[0]}</small></td>
-                    <td>${h.client}</td>
-                    <td><small>${h.items.length} skus</small></td>
-                    <td style="text-align:right">${c}${parseFloat(h.total).toFixed(2)}</td>
-                    <td style="text-align:right; font-weight:bold; color:#2E7D32">+${c}${saleProfit.toFixed(2)}</td>
-                </tr>`;
-            });
-            document.getElementById('totalProfitDisplay').innerText = `${c}${gT.toFixed(2)}`;
-        }
-
-        // --- 8. TOOLS & CONFIG ---
-        window.nav = (v, e) => {
-            document.querySelectorAll('.view-panel').forEach(x => x.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-            document.getElementById('view-'+v).classList.add('active'); 
-            if(e) e.classList.add('active');
-            if(v==='pos') window.updateAllViews();
-            if(v==='profit') renderProfit();
-        }
-
-        window.toggleCart = () => { document.getElementById('cartDrawer').classList.toggle('open'); document.getElementById('mainOverlay').classList.toggle('active'); renderCart(); }
-        window.filterCat = (c, el) => { curFilter=c; document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); el.classList.add('active'); window.updateAllViews(); }
-        
-        window.saveConfig = () => {
-            config.name = document.getElementById('cfgName').value;
-            config.currency = document.getElementById('cfgCurrency').value;
-            config.color = document.getElementById('cfgColor').value;
-            config.maintenance = document.getElementById('cfgMaintenance').checked;
-            config.logo = document.getElementById('cfgLogoData').value;
-            // Guardamos
-            dbRef.ref('config').set(config).then(() => Toast.show("Config Guardada"));
-        }
-
-        window.applyConfig = () => {
-            document.documentElement.style.setProperty('--primary', config.color);
-            document.getElementById('brandName').innerText = config.name;
-            document.getElementById('mobileTitleTxt').innerText = config.name;
-            if(config.logo) {
-                document.querySelectorAll('#displayLogoSidebar, #mobileLogoImg, #cfgLogoPreview').forEach(i => { i.src = config.logo; i.style.display='block'; });
-                document.getElementById('cfgLogoData').value = config.logo;
-            }
-            // Populate inputs
-            document.getElementById('cfgName').value = config.name;
-            document.getElementById('cfgColor').value = config.color;
-            document.getElementById('cfgCurrency').value = config.currency;
-            document.getElementById('cfgMaintenance').checked = config.maintenance || false;
-        }
-
-        window.saveProduct = () => {
-            const id = document.getElementById('prodId').value;
-            const obj = {
-                c: document.getElementById('pCode').value, m: document.getElementById('pModel').value,
-                cat: document.getElementById('pCat').value, d: parseFloat(document.getElementById('pPrice').value)||0,
-                stock: parseInt(document.getElementById('pStock').value)||0, t: document.getElementById('pSize').value,
-                img: document.getElementById('prodImgBase64').value
-            };
-
-            const ref = dbRef.ref('inventory');
-            if(id) {
-                // Actualizar item específico en el array (necesita encontrar indice)
-                ref.transaction(curr => {
-                    if(!curr) return curr;
-                    const i = curr.findIndex(x => x.id == id);
-                    if(i!==-1) curr[i] = {...curr[i], ...obj};
-                    return curr;
-                }).then(() => { closeModal('modalProd'); Toast.show("Actualizado"); });
-            } else {
-                // Crear Nuevo
-                ref.transaction(curr => {
-                    if(!curr) curr = [];
-                    curr.unshift({ ...obj, id: Date.now() });
-                    return curr;
-                }).then(() => { closeModal('modalProd'); Toast.show("Creado"); });
-            }
-        }
-        
-        window.delProd = (id) => {
-            if(!confirm("Borrar?")) return;
-            dbRef.ref('inventory').transaction(curr => {
-                return curr ? curr.filter(x => x.id !== id) : curr;
-            });
-        }
-
-        // Image Utils
-        window.compressAndPreview = function(file, imgID, inputID) {
-            if(!file || !file.type.startsWith('image/')) return;
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                const img = new Image(); img.src = e.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX = 400; // Compresión agresiva para performance
-                    let w=img.width, h=img.height;
-                    if(w>h){ if(w>MAX){h*=MAX/w; w=MAX}} else {if(h>MAX){w*=MAX/h; h=MAX}}
-                    canvas.width=w; canvas.height=h;
-                    canvas.getContext('2d').drawImage(img,0,0,w,h);
-                    const data = canvas.toDataURL('image/jpeg', 0.6);
-                    document.getElementById(imgID).src=data;
-                    document.getElementById(imgID).style.display='block';
-                    document.getElementById(inputID).value=data;
+                return currInv;
+            }, (err, committed) => {
+                if(committed) {
+                    dbRef.ref('history/' + key).remove();
+                    Toast.show("Venta Anulada", "success");
+                } else {
+                    alert("Error devolviendo stock: " + err);
                 }
+            });
+        });
+    }
+
+    function renderProfit() {
+        // Cálculo Total Basado en Historial Completo
+        const t = document.getElementById('profitBody'); t.innerHTML = "";
+        let gT = 0; const c = config.currency;
+
+        history.forEach(h => {
+            let saleProfit = 0;
+            h.items.forEach(item => {
+                let code = item.c.trim();
+                let profitPerDozen = PROFIT_DB[code] || 5.5; 
+                let itemProfit = (profitPerDozen / 12) * item.deduct; 
+                saleProfit += itemProfit;
+            });
+            gT += saleProfit;
+            
+            t.innerHTML += `<tr>
+                <td><small>${h.date.split(',')[0]}</small></td>
+                <td>${h.client}</td>
+                <td><small>${h.items.length} skus</small></td>
+                <td style="text-align:right">${c}${parseFloat(h.total).toFixed(2)}</td>
+                <td style="text-align:right; font-weight:bold; color:#2E7D32">+${c}${saleProfit.toFixed(2)}</td>
+            </tr>`;
+        });
+        document.getElementById('totalProfitDisplay').innerText = `${c}${gT.toFixed(2)}`;
+    }
+
+    // --- 8. TOOLS & CONFIG ---
+    window.nav = (v, e) => {
+        document.querySelectorAll('.view-panel').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+        document.getElementById('view-'+v).classList.add('active'); 
+        if(e) e.classList.add('active');
+        if(v==='pos') window.updateAllViews();
+        if(v==='profit') renderProfit();
+    }
+
+    window.toggleCart = () => { document.getElementById('cartDrawer').classList.toggle('open'); document.getElementById('mainOverlay').classList.toggle('active'); renderCart(); }
+    window.filterCat = (c, el) => { curFilter=c; document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); el.classList.add('active'); window.updateAllViews(); }
+    
+    window.saveConfig = () => {
+        config.name = document.getElementById('cfgName').value;
+        config.currency = document.getElementById('cfgCurrency').value;
+        config.color = document.getElementById('cfgColor').value;
+        config.maintenance = document.getElementById('cfgMaintenance').checked;
+        config.logo = document.getElementById('cfgLogoData').value;
+        dbRef.ref('config').set(config).then(() => Toast.show("Config Guardada"));
+    }
+
+    window.applyConfig = () => {
+        document.documentElement.style.setProperty('--primary', config.color);
+        document.getElementById('brandName').innerText = config.name;
+        document.getElementById('mobileTitleTxt').innerText = config.name;
+        if(config.logo) {
+            document.querySelectorAll('#displayLogoSidebar, #mobileLogoImg, #cfgLogoPreview').forEach(i => { i.src = config.logo; i.style.display='block'; });
+            document.getElementById('cfgLogoData').value = config.logo;
+        }
+        document.getElementById('cfgName').value = config.name;
+        document.getElementById('cfgColor').value = config.color;
+        document.getElementById('cfgCurrency').value = config.currency;
+        document.getElementById('cfgMaintenance').checked = config.maintenance || false;
+    }
+
+    // --- FUNCIÓN EDITAR AÑADIDA (CORRECCIÓN) ---
+    window.openEdit = (id) => {
+        const prod = db.find(p => p.id === id);
+        if(!prod) return;
+
+        // Llenar campos con data existente
+        document.getElementById('prodId').value = prod.id;
+        document.getElementById('pCode').value = prod.c;
+        document.getElementById('pModel').value = prod.m;
+        document.getElementById('pCat').value = prod.cat;
+        document.getElementById('pPrice').value = prod.d;
+        document.getElementById('pStock').value = prod.stock;
+        document.getElementById('pSize').value = prod.t || "";
+
+        // Foto existente
+        if(prod.img) {
+            document.getElementById('imgPreview').src = prod.img;
+            document.getElementById('imgPreview').style.display = 'block';
+            document.getElementById('prodImgBase64').value = prod.img;
+        } else {
+            document.getElementById('imgPreview').style.display = 'none';
+            document.getElementById('prodImgBase64').value = "";
+        }
+        
+        document.getElementById('modalProdTitle').innerText = "Editar Producto";
+        document.getElementById('modalProd').style.display = 'flex';
+    }
+
+    window.saveProduct = () => {
+        const id = document.getElementById('prodId').value;
+        const obj = {
+            c: document.getElementById('pCode').value, m: document.getElementById('pModel').value,
+            cat: document.getElementById('pCat').value, d: parseFloat(document.getElementById('pPrice').value)||0,
+            stock: parseInt(document.getElementById('pStock').value)||0, t: document.getElementById('pSize').value,
+            img: document.getElementById('prodImgBase64').value
+        };
+
+        const ref = dbRef.ref('inventory');
+        if(id) {
+            // Actualizar item específico
+            ref.transaction(curr => {
+                if(!curr) return curr;
+                const i = curr.findIndex(x => x.id == id);
+                if(i!==-1) curr[i] = {...curr[i], ...obj};
+                return curr;
+            }).then(() => { closeModal('modalProd'); Toast.show("Actualizado"); });
+        } else {
+            // Crear Nuevo
+            ref.transaction(curr => {
+                if(!curr) curr = [];
+                curr.unshift({ ...obj, id: Date.now() });
+                return curr;
+            }).then(() => { closeModal('modalProd'); Toast.show("Creado"); });
+        }
+    }
+    
+    window.delProd = (id) => {
+        if(!confirm("Borrar?")) return;
+        dbRef.ref('inventory').transaction(curr => {
+            return curr ? curr.filter(x => x.id !== id) : curr;
+        });
+    }
+
+    // Image Utils
+    window.compressAndPreview = function(file, imgID, inputID) {
+        if(!file || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image(); img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX = 400;
+                let w=img.width, h=img.height;
+                if(w>h){ if(w>MAX){h*=MAX/w; w=MAX}} else {if(h>MAX){w*=MAX/h; h=MAX}}
+                canvas.width=w; canvas.height=h;
+                canvas.getContext('2d').drawImage(img,0,0,w,h);
+                const data = canvas.toDataURL('image/jpeg', 0.6);
+                document.getElementById(imgID).src=data;
+                document.getElementById(imgID).style.display='block';
+                document.getElementById(inputID).value=data;
             }
         }
+    }
 
-        window.openModalProd = () => {
-            ['pCode','pModel','pPrice','pStock','pSize','prodImgBase64'].forEach(x => document.getElementById(x).value="");
-            document.getElementById('prodId').value="";
-            document.getElementById('imgPreview').style.display='none';
-            document.getElementById('modalProd').style.display='flex';
-        }
+    window.openModalProd = () => {
+        ['pCode','pModel','pPrice','pStock','pSize','prodImgBase64'].forEach(x => document.getElementById(x).value="");
+        document.getElementById('prodId').value="";
+        document.getElementById('modalProdTitle').innerText = "Nuevo Producto";
+        document.getElementById('imgPreview').style.display='none';
+        document.getElementById('modalProd').style.display='flex';
+    }
 
-        window.closeModal = (id) => document.getElementById(id).style.display='none';
-        window.onclick = (e) => { if(e.target.className === 'modal') e.target.style.display='none'; }
-        
-        window.reprint = (id) => {
-            const h = history.find(x=>x.id==id);
-            if(h) printFromData(h);
-        }
+    window.closeModal = (id) => document.getElementById(id).style.display='none';
+    window.onclick = (e) => { if(e.target.className === 'modal') e.target.style.display='none'; }
+    
+    window.reprint = (id) => {
+        const h = history.find(x=>x.id==id);
+        if(h) printFromData(h);
+    }
 
-        function printFromData(rec){
-            document.getElementById('printBrand').innerText = config.name;
-            document.getElementById('printDate').innerText = rec.date;
-            document.getElementById('printClientBlock').innerHTML = `<b>${rec.client}</b><br>ID: ${rec.id}`;
-            const tb = document.getElementById('printBody'); tb.innerHTML="";
-            rec.items.forEach(i => {
-                tb.innerHTML += `<tr><td>${i.qtyTxt}</td><td>${i.c} ${i.m}</td><td style="text-align:right">${config.currency}${i.total.toFixed(2)}</td></tr>`;
-            });
-            document.getElementById('printTotal').innerText = config.currency + rec.total.toFixed(2);
-            setTimeout(() => window.print(), 300);
-        }
-        
-        // --- 9. SEGUROS ---
-        window.reloadInitialData = () => {
-             // Solo ejemplo de restauración básica si se pierde todo
-             if(confirm("DANGER: Esto borrará la base de datos y pondrá stock 50. Continuar?")) {
-                 const sample = [{id:1, c:"TEST", m:"Test Prod", cat:"Dama", d:12, stock:50, t:"36-40"}];
-                 dbRef.ref('inventory').set(sample).then(() => window.location.reload());
-             }
-        }
+    function printFromData(rec){
+        document.getElementById('printBrand').innerText = config.name;
+        document.getElementById('printDate').innerText = rec.date;
+        document.getElementById('printClientBlock').innerHTML = `<b>${rec.client}</b><br>ID: ${rec.id}`;
+        const tb = document.getElementById('printBody'); tb.innerHTML="";
+        rec.items.forEach(i => {
+            tb.innerHTML += `<tr><td>${i.qtyTxt}</td><td>${i.c} ${i.m}</td><td style="text-align:right">${config.currency}${i.total.toFixed(2)}</td></tr>`;
+        });
+        document.getElementById('printTotal').innerText = config.currency + rec.total.toFixed(2);
+        setTimeout(() => window.print(), 300);
+    }
+    
+    window.reloadInitialData = () => {
+            if(confirm("DANGER: Esto borrará la base de datos y pondrá stock 50. Continuar?")) {
+                const sample = [{id:1, c:"TEST", m:"Test Prod", cat:"Dama", d:12, stock:50, t:"36-40"}];
+                dbRef.ref('inventory').set(sample).then(() => window.location.reload());
+            }
+    }
 
-        const Toast = { show: (m,t='success') => {
-            const d = document.createElement('div'); d.className = `toast ${t}`;
-            d.innerHTML = `<i class="fa-solid fa-${t==='success'?'check':'circle-exclamation'}"></i> ${m}`;
-            document.getElementById('toast-container').appendChild(d);
-            setTimeout(() => d.remove(), 3000);
-        }};
-    </script>
+    const Toast = { show: (m,t='success') => {
+        const d = document.createElement('div'); d.className = `toast ${t}`;
+        d.innerHTML = `<i class="fa-solid fa-${t==='success'?'check':'circle-exclamation'}"></i> ${m}`;
+        document.getElementById('toast-container').appendChild(d);
+        setTimeout(() => d.remove(), 3000);
+    }};
+</script>
 </body>
 </html>
+
