@@ -535,7 +535,8 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+   <!-- FIREBASE SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
@@ -607,7 +608,7 @@
 
     // --- 4. CORE: GESTIÓN DE DATOS ---
     function startSystem() {
-        // A. Config
+        // A. Cargar Configuración
         dbRef.ref('config').on('value', s => { 
             if(s.val()){ 
                 config = s.val(); 
@@ -616,7 +617,7 @@
             } else { saveConfig(); } 
         });
 
-        // B. Inventario
+        // B. Cargar Inventario
         dbRef.ref('inventory').once('value').then(s => {
             db = s.val() || [];
             window.updateAllViews();
@@ -639,7 +640,8 @@
             });
         });
 
-        // C. Historial COMPLETO (Corregido: Se quitó el limitToLast para traer todo)
+        // C. Historial COMPLETO (CORREGIDO: Sin límites)
+        // Se eliminó .limitToLast(100) para traer TODAS las ventas
         dbRef.ref('history').on('value', s => { 
             history = s.val() ? Object.values(s.val()).sort((a,b) => b.id - a.id) : []; 
             renderHistory();
@@ -714,7 +716,80 @@
         });
     }
 
-    // --- 6. PROCESAMIENTO DE VENTAS ---
+    // --- 6. GESTIÓN DE EDICIÓN Y NUEVO PRODUCTO (CORREGIDO) ---
+    window.openEdit = function(id) {
+        // Encontrar el producto
+        const p = db.find(x => x.id === id);
+        if(!p) return;
+
+        // Rellenar formulario
+        document.getElementById('prodId').value = p.id;
+        document.getElementById('pModel').value = p.m;
+        document.getElementById('pCode').value = p.c;
+        document.getElementById('pCat').value = p.cat;
+        document.getElementById('pPrice').value = p.d;
+        document.getElementById('pStock').value = p.stock;
+        document.getElementById('pSize').value = p.t || "";
+        
+        if(p.img) {
+            document.getElementById('prodImgBase64').value = p.img;
+            document.getElementById('imgPreview').src = p.img;
+            document.getElementById('imgPreview').style.display = 'block';
+        } else {
+            document.getElementById('prodImgBase64').value = "";
+            document.getElementById('imgPreview').style.display = 'none';
+        }
+
+        // Cambiar título y mostrar
+        document.getElementById('modalProdTitle').innerText = "Editar Producto";
+        document.getElementById('modalProd').style.display = 'flex';
+    }
+
+    window.openModalProd = () => {
+        // Limpiar para crear nuevo
+        ['pCode','pModel','pPrice','pStock','pSize','prodImgBase64'].forEach(x => document.getElementById(x).value="");
+        document.getElementById('prodId').value="";
+        document.getElementById('imgPreview').style.display='none';
+        document.getElementById('modalProdTitle').innerText = "Nuevo Producto"; // Reset título
+        document.getElementById('modalProd').style.display='flex';
+    }
+
+    window.saveProduct = () => {
+        const id = document.getElementById('prodId').value;
+        const obj = {
+            c: document.getElementById('pCode').value, m: document.getElementById('pModel').value,
+            cat: document.getElementById('pCat').value, d: parseFloat(document.getElementById('pPrice').value)||0,
+            stock: parseInt(document.getElementById('pStock').value)||0, t: document.getElementById('pSize').value,
+            img: document.getElementById('prodImgBase64').value
+        };
+
+        const ref = dbRef.ref('inventory');
+        if(id) {
+            // Actualizar item específico
+            ref.transaction(curr => {
+                if(!curr) return curr;
+                const i = curr.findIndex(x => x.id == id);
+                if(i!==-1) curr[i] = {...curr[i], ...obj};
+                return curr;
+            }).then(() => { closeModal('modalProd'); Toast.show("Actualizado"); });
+        } else {
+            // Crear Nuevo
+            ref.transaction(curr => {
+                if(!curr) curr = [];
+                curr.unshift({ ...obj, id: Date.now() });
+                return curr;
+            }).then(() => { closeModal('modalProd'); Toast.show("Creado"); });
+        }
+    }
+    
+    window.delProd = (id) => {
+        if(!confirm("Borrar?")) return;
+        dbRef.ref('inventory').transaction(curr => {
+            return curr ? curr.filter(x => x.id !== id) : curr;
+        });
+    }
+
+    // --- 7. PROCESAMIENTO DE VENTAS ---
     window.openSale = function(id){ 
         saleItem = db.find(x => x.id == id); 
         if(!saleItem) return;
@@ -775,16 +850,15 @@
 
         const invRef = dbRef.ref('inventory');
 
+        // Transacción Atómica
         invRef.transaction((currInv) => {
             if(!currInv) return currInv;
 
             for(let item of cart) {
                 const idx = currInv.findIndex(p => p.id === item.pId);
-                if(idx === -1) throw "Prod no encontrado (borrado?)"; 
-                
+                if(idx === -1) throw "Prod no encontrado";
                 const prod = currInv[idx];
                 if(prod.stock < item.deduct) throw `Stock insuficiente: ${prod.c}`;
-
                 prod.stock -= item.deduct;
                 currInv[idx] = prod;
             }
@@ -793,7 +867,6 @@
             btn.disabled = false; btn.innerText = "CONFIRMAR VENTA";
             
             if(err) {
-                console.error(err);
                 alert("❌ ERROR: " + err.message || err);
             } else if(committed) {
                 let totalVenta = 0, descStr = "";
@@ -833,11 +906,12 @@
         document.getElementById('cartCountBadge').innerText=cart.length;
     }
 
-    // --- 7. HISTORIAL & PROFIT (TOTALES) ---
+    // --- 8. VISUALIZACIÓN DE HISTORIAL Y PROFIT ---
     function renderHistory() {
         const t = document.getElementById('histBody'); t.innerHTML = "";
         const c = config.currency;
         
+        // Muestra todas las ventas cargadas
         history.forEach(h => {
             t.innerHTML += `
             <tr>
@@ -863,6 +937,7 @@
             
             if(!sale) return alert("Venta no encontrada");
 
+            // Devolución Atómica
             dbRef.ref('inventory').transaction(currInv => {
                 if(!currInv) return currInv;
                 sale.items.forEach(soldItem => {
@@ -877,14 +952,13 @@
                     dbRef.ref('history/' + key).remove();
                     Toast.show("Venta Anulada", "success");
                 } else {
-                    alert("Error devolviendo stock: " + err);
+                    alert("Error: " + err);
                 }
             });
         });
     }
 
     function renderProfit() {
-        // Cálculo Total Basado en Historial Completo
         const t = document.getElementById('profitBody'); t.innerHTML = "";
         let gT = 0; const c = config.currency;
 
@@ -909,7 +983,7 @@
         document.getElementById('totalProfitDisplay').innerText = `${c}${gT.toFixed(2)}`;
     }
 
-    // --- 8. TOOLS & CONFIG ---
+    // --- 9. TOOLS & CONFIG ---
     window.nav = (v, e) => {
         document.querySelectorAll('.view-panel').forEach(x => x.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
@@ -945,70 +1019,6 @@
         document.getElementById('cfgMaintenance').checked = config.maintenance || false;
     }
 
-    // --- FUNCIÓN EDITAR AÑADIDA (CORRECCIÓN) ---
-    window.openEdit = (id) => {
-        const prod = db.find(p => p.id === id);
-        if(!prod) return;
-
-        // Llenar campos con data existente
-        document.getElementById('prodId').value = prod.id;
-        document.getElementById('pCode').value = prod.c;
-        document.getElementById('pModel').value = prod.m;
-        document.getElementById('pCat').value = prod.cat;
-        document.getElementById('pPrice').value = prod.d;
-        document.getElementById('pStock').value = prod.stock;
-        document.getElementById('pSize').value = prod.t || "";
-
-        // Foto existente
-        if(prod.img) {
-            document.getElementById('imgPreview').src = prod.img;
-            document.getElementById('imgPreview').style.display = 'block';
-            document.getElementById('prodImgBase64').value = prod.img;
-        } else {
-            document.getElementById('imgPreview').style.display = 'none';
-            document.getElementById('prodImgBase64').value = "";
-        }
-        
-        document.getElementById('modalProdTitle').innerText = "Editar Producto";
-        document.getElementById('modalProd').style.display = 'flex';
-    }
-
-    window.saveProduct = () => {
-        const id = document.getElementById('prodId').value;
-        const obj = {
-            c: document.getElementById('pCode').value, m: document.getElementById('pModel').value,
-            cat: document.getElementById('pCat').value, d: parseFloat(document.getElementById('pPrice').value)||0,
-            stock: parseInt(document.getElementById('pStock').value)||0, t: document.getElementById('pSize').value,
-            img: document.getElementById('prodImgBase64').value
-        };
-
-        const ref = dbRef.ref('inventory');
-        if(id) {
-            // Actualizar item específico
-            ref.transaction(curr => {
-                if(!curr) return curr;
-                const i = curr.findIndex(x => x.id == id);
-                if(i!==-1) curr[i] = {...curr[i], ...obj};
-                return curr;
-            }).then(() => { closeModal('modalProd'); Toast.show("Actualizado"); });
-        } else {
-            // Crear Nuevo
-            ref.transaction(curr => {
-                if(!curr) curr = [];
-                curr.unshift({ ...obj, id: Date.now() });
-                return curr;
-            }).then(() => { closeModal('modalProd'); Toast.show("Creado"); });
-        }
-    }
-    
-    window.delProd = (id) => {
-        if(!confirm("Borrar?")) return;
-        dbRef.ref('inventory').transaction(curr => {
-            return curr ? curr.filter(x => x.id !== id) : curr;
-        });
-    }
-
-    // Image Utils
     window.compressAndPreview = function(file, imgID, inputID) {
         if(!file || !file.type.startsWith('image/')) return;
         const reader = new FileReader();
@@ -1028,14 +1038,6 @@
                 document.getElementById(inputID).value=data;
             }
         }
-    }
-
-    window.openModalProd = () => {
-        ['pCode','pModel','pPrice','pStock','pSize','prodImgBase64'].forEach(x => document.getElementById(x).value="");
-        document.getElementById('prodId').value="";
-        document.getElementById('modalProdTitle').innerText = "Nuevo Producto";
-        document.getElementById('imgPreview').style.display='none';
-        document.getElementById('modalProd').style.display='flex';
     }
 
     window.closeModal = (id) => document.getElementById(id).style.display='none';
@@ -1059,10 +1061,10 @@
     }
     
     window.reloadInitialData = () => {
-            if(confirm("DANGER: Esto borrará la base de datos y pondrá stock 50. Continuar?")) {
-                const sample = [{id:1, c:"TEST", m:"Test Prod", cat:"Dama", d:12, stock:50, t:"36-40"}];
-                dbRef.ref('inventory').set(sample).then(() => window.location.reload());
-            }
+         if(confirm("DANGER: Esto borrará la base de datos y pondrá stock 50. Continuar?")) {
+             const sample = [{id:1, c:"TEST", m:"Test Prod", cat:"Dama", d:12, stock:50, t:"36-40"}];
+             dbRef.ref('inventory').set(sample).then(() => window.location.reload());
+         }
     }
 
     const Toast = { show: (m,t='success') => {
@@ -1074,4 +1076,5 @@
 </script>
 </body>
 </html>
+
 
