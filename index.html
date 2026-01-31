@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>World Store V9.6 - Cloud Optimizado</title>
+    <title>World Store V9.5 - Gestión Total</title>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -208,8 +208,6 @@
         .btn-danger { background: linear-gradient(145deg, #C62828, #E53935); color: white; box-shadow: 0 5px 15px rgba(198, 40, 40, 0.3);}
         .btn-blue { background: linear-gradient(145deg, #1565C0, #1E88E5); color: white; }
 
-        .btn-warning { background: linear-gradient(145deg, #FFB300, #FFD54F); color: #3e2723; }
-
         input, select { 
             width: 100%; padding: 12px 15px; border: 1px solid #e1e3ea; border-radius: 10px; 
             font-size: 0.9rem; color: var(--text-main); background: #fff; transition: 0.2s;
@@ -325,7 +323,7 @@
             <div class="nav-item" onclick="toggleCart()"><i class="fa-solid fa-cart-shopping"></i> <span>Carrito <b id="cartCountBadge" style="background:var(--primary); color:white; padding:1px 6px; border-radius:10px; font-size:0.7em;">0</b></span></div>
             <div class="nav-item" onclick="nav('config', this)"><i class="fa-solid fa-sliders"></i> <span>Configuración</span></div>
         </div>
-        <div class="sys-info"><span id="footerBrand">SISTEMA v9.6</span></div>
+        <div class="sys-info"><span id="footerBrand">SISTEMA v9.2</span></div>
     </aside>
 
     <main>
@@ -385,15 +383,10 @@
         <div id="view-config" class="view-panel">
             <div class="settings-header"><i class="fa-solid fa-sliders"></i> Personalización del Sistema</div>
 
-            <!-- MODULO DE COSTOS -->
+            <!-- MODULO DE COSTOS AGREGADO AQUI -->
             <div class="config-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f0f0f0; margin-bottom:20px; padding-bottom:10px;">
-                    <div class="section-title" style="margin:0; border:none;"><i class="fa-solid fa-file-invoice-dollar"></i> Costos y Ganancias</div>
-                    <!-- BOTÓN IMPORTANTE PARA EL USUARIO -->
-                    <button class="btn btn-warning" onclick="loadDefaultProfitList()" style="width:auto; font-size:0.75rem; padding:5px 10px;">⚠️ Cargar Lista Nueva (PDF)</button>
-                </div>
-                
-                <p style="font-size:0.85rem; color:#666; margin-bottom:15px;">Tabla de ganancia neta por docena para el cálculo de utilidades.</p>
+                <div class="section-title"><i class="fa-solid fa-file-invoice-dollar"></i> Gestión de Costos y Ganancias</div>
+                <p style="font-size:0.85rem; color:#666; margin-bottom:15px;">Actualice el valor de la ganancia neta por docena para cada código. Utilice el buscador para encontrar un código específico.</p>
                 
                 <div class="search-wrap" style="width:100%; max-width:100%; margin-bottom:15px; background:white;">
                     <i class="fa-solid fa-search"></i>
@@ -408,13 +401,14 @@
                         <tbody id="profitConfigBody"></tbody>
                     </table>
                 </div>
-                <button class="btn btn-success" onclick="saveProfitTable()"><i class="fa-solid fa-save"></i> GUARDAR CAMBIOS</button>
+                <button class="btn btn-success" onclick="saveProfitTable()"><i class="fa-solid fa-save"></i> GUARDAR TABLA DE GANANCIAS</button>
             </div>
 
             <div class="config-card">
                 <div class="section-title">Identidad Visual</div>
+
                 <div class="form-row">
-                    <label>Logo de la Empresa</label>
+                    <label>Logo de la Empresa (Esquina Superior Izquierda)</label>
                     <div style="border:1px solid #ddd; padding:15px; border-radius:8px; display:flex; align-items:center; gap:15px; background:#f9f9f9;">
                         <img id="cfgLogoPreview" src="https://placehold.co/100x100?text=LOGO" style="width:60px; height:60px; object-fit:contain; background:white; border-radius:50%; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
                         <div style="flex:1;">
@@ -423,51 +417,78 @@
                                 <i class="fa-solid fa-cloud-arrow-up"></i> Cambiar Logo
                             </button>
                             <input type="hidden" id="cfgLogoData">
+                            <div style="font-size:0.75rem; color:#666; margin-top:5px;">El logo se ajustará automáticamente para la barra lateral y facturas.</div>
                         </div>
                     </div>
                 </div>
 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                    <div class="form-row"><label>Nombre Empresa</label><input type="text" id="cfgName" placeholder="WORLD STORE"></div>
+                    <div class="form-row"><label>Nombre Empresa (Título Principal)</label><input type="text" id="cfgName" placeholder="WORLD STORE"></div>
                     <div class="form-row"><label>Subtítulo / Eslogan</label><input type="text" id="cfgSub" placeholder="Mayoristas..."></div>
                 </div>
-                <div class="form-row"><label>Color Tema</label><input type="color" id="cfgColor" style="height:45px;width:100%;padding:2px;cursor:pointer;" oninput="previewColor(this.value)"></div>
+
+                <div class="form-row"><label>Color Principal del Tema</label><input type="color" id="cfgColor" style="height:45px;width:100%;padding:2px;cursor:pointer;" oninput="previewColor(this.value)"></div>
             </div>
 
             <div class="config-card">
-                <div class="section-title">Facturación & Estado</div>
+                <div class="section-title">Operaciones & Facturación</div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                    <div class="form-row"><label>Teléfono</label><input type="tel" id="cfgTel"></div>
-                    <div class="form-row"><label>Moneda</label><input type="text" id="cfgCurrency"></div>
+                    <div class="form-row"><label>Teléfono Contacto</label><input type="tel" id="cfgTel"></div>
+                    <div class="form-row"><label>Símbolo Moneda</label><input type="text" id="cfgCurrency"></div>
                 </div>
-                <div class="form-row"><label>Pie de Factura</label><input type="text" id="cfgFooter"></div>
-                <div class="form-row"><label>Banner Global</label><input type="text" id="cfgBanner" placeholder="Anuncio importante..."></div>
-                <label class="checkbox-wrap"><input type="checkbox" id="cfgMaintenance"><span>Modo Mantenimiento (Cerrado)</span></label>
+                <div class="form-row"><label>Mensaje Pie de Factura</label><input type="text" id="cfgFooter"></div>
             </div>
-            
+
+            <div class="config-card">
+                <div class="section-title">Anuncios y Estado</div>
+                <div class="form-row"><label>Anuncio Global (Banner amarillo superior)</label><input type="text" id="cfgBanner" placeholder="Ej: ¡Ofertas de Navidad!"></div>
+
+                <label class="checkbox-wrap">
+                    <input type="checkbox" id="cfgMaintenance">
+                    <span>Activar Modo "Cerrado / En Mantenimiento" (Oculta catálogo a clientes)</span>
+                </label>
+            </div>
+
             <button class="btn btn-primary" style="padding:15px; font-size:1.1rem;" onclick="window.saveConfig()"><i class="fa-solid fa-floppy-disk"></i> GUARDAR CONFIGURACIÓN</button>
-            <br><br>
+
+            <br><br><br>
+            <div style="border-top:1px solid #eee; padding-top:20px; text-align:center;">
+                <p style="color:#666;font-size:0.8rem;">Zona de Recuperación</p>
+                <button class="btn btn-blue" style="background:#607D8B; max-width:300px;" onclick="window.reloadInitialData()"><i class="fa-solid fa-database"></i> Recargar Catálogo PDF Original</button>
+            </div>
         </div>
 
-        <!-- VIEW PROFIT -->
+        <!-- VIEW PROFIT (NUEVA PESTAÑA) -->
         <div id="view-profit" class="view-panel">
             <div style="background:white; padding:20px; border-radius:16px; margin-bottom:20px; box-shadow:var(--shadow-soft); display:flex; justify-content:space-between; align-items:center;">
-                <div><h3 style="margin:0; color:var(--dark);">Reporte de Ganancias</h3><small style="color:#777;">Utilidad Neta Total</small></div>
+                <div>
+                    <h3 style="margin:0; color:var(--dark);">Reporte de Ganancias</h3>
+                    <small style="color:#777;">Utilidad Neta basada en configuración de Costos</small>
+                </div>
                 <div style="text-align:right;">
-                    <div style="font-size:0.8rem;color:#777">Ganancia Est.</div>
+                    <div style="font-size:0.8rem;color:#777">Ganancia Total</div>
                     <div style="font-size:1.8rem;font-weight:800;color:#2E7D32" id="totalProfitDisplay">$0.00</div>
                 </div>
             </div>
+
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Fecha</th><th>Cliente / Venta</th><th>Items</th><th style="text-align:right">Total</th><th style="text-align:right; color:#2E7D32">Ganancia</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Venta / Cliente</th>
+                            <th>Items Vendidos</th>
+                            <th style="text-align:right">Total Venta</th>
+                            <th style="text-align:right; color:#2E7D32">Ganancia Est.</th>
+                        </tr>
+                    </thead>
                     <tbody id="profitBody"></tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <!-- DRAWER & MODALS (Idénticos para mantener compatibilidad) -->
+    <!-- DRAWER & MODALS -->
     <div id="cartDrawer" class="cart-drawer">
         <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
             <h3 style="margin:0">🛒 Tu Pedido</h3>
@@ -526,6 +547,7 @@
                 <span style="color:#aaa;"><i class="fa-solid fa-camera"></i> Toca para subir foto</span>
                 <img id="imgPreview">
                 <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="compressAndPreview(this.files[0], 'imgPreview', 'prodImgBase64')">
+                <div class="upload-loading">Procesando imagen...</div>
             </div>
             <div style="margin-top:20px; display:flex; gap:10px;">
                 <button class="btn btn-danger" onclick="closeModal('modalProd')">Cancelar</button>
@@ -539,24 +561,28 @@
             <div style="border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:15px;display:flex;justify-content:space-between; align-items:center;">
                 <div style="display:flex; align-items:center; gap:15px;">
                     <img id="printLogoDisplay" style="height:70px;width:70px;object-fit:contain;display:none;">
-                    <div><h1 id="printBrand" style="margin:0;font-size:22px;text-transform:uppercase;"></h1><div id="printSub" style="font-weight:bold; color:#555;"></div><div id="printTel" style="font-size:12px;"></div></div>
+                    <div>
+                        <h1 id="printBrand" style="margin:0;font-size:22px;text-transform:uppercase;"></h1>
+                        <div id="printSub" style="font-weight:bold; color:#555;"></div>
+                        <div id="printTel" style="font-size:12px;"></div>
+                    </div>
                 </div>
                 <div style="text-align:right;"><h2 style="color:black;margin:0;">NOTA DE ENTREGA</h2><div style="margin-top:5px;">Fecha: <span id="printDate"></span></div></div>
             </div>
             <div id="printClientBlock" style="border:1px solid #ccc; padding:10px; margin-bottom:20px; border-radius:4px; background:#f9f9f9;"></div>
             <table style="width:100%;border-collapse:collapse;margin-bottom:20px;"><thead><tr style="background:#eee;font-weight:bold;text-transform:uppercase;font-size:12px;"><th style="padding:8px;text-align:left;">Cant.</th><th style="padding:8px;text-align:left;">Descripción</th><th style="padding:8px;text-align:right;">Subtotal</th></tr></thead><tbody id="printBody"></tbody></table>
-            <div style="text-align:right;font-size:20px;font-weight:bold;border-top:2px solid #000;padding-top:10px;">TOTAL: <span id="printTotal"></span></div>
+            <div style="text-align:right;font-size:20px;font-weight:bold;border-top:2px solid #000;padding-top:10px;">TOTAL A PAGAR: <span id="printTotal"></span></div>
             <div id="printFooter" style="text-align:center;font-size:12px;margin-top:40px;color:#555;font-style:italic;"></div>
         </div>
     </div>
 
-    <!-- SCRIPTS -->
+    <!-- SCRIPT -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
     <script>
-        // CONFIGURACIÓN DE FIREBASE
+        // --- CONFIGURACIÓN DE FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyB5ygJIoEgpJPKY0qMULocohmzXGc7UWFE",
             authDomain: "worldstoresystem.firebaseapp.com",
@@ -567,142 +593,383 @@
             appId: "1:460628958914:web:95da76852bedecbdcf255b",
             measurementId: "G-9NQMR0XVHT"
         };
+
         try { firebase.initializeApp(firebaseConfig); } catch(e) { console.error(e); }
+        
         const dbRef = firebase.database();
         const auth = firebase.auth(); 
 
-        let db=[], history=[], config={name:"WORLD STORE", sub:"", color:"#C62828", currency:"$", tel:"", footer:""}, cart=[], saleItem=null, saleMode='doc', profitMap = {};
+        // VARIABLES GLOBALES
+        let db=[], history=[], config={name:"WORLD STORE", sub:"ARIANA & GABRIEL", color:"#C62828", currency:"$", tel:"0424-7125937", footer:"Gracias por su compra"};
+        let cart=[], curFilter='all', saleItem=null, saleMode='doc';
 
-        // --- LISTA ACTUALIZADA DEL PDF (V9.6) ---
-        // Se carga esta lista si Firebase está vacío o si el usuario presiona "Cargar Lista Nueva"
-        const DEFAULT_PROFIT_DB = {
-            "A-2409": 5, "A-2425": 7, "AM-99": 10.8, "BM-14": 6, "G 008B": 5, "HY 001": 5, 
-            "HY 002-1": 5, "HY 002-3": 5, "HY 003-1": 5, "HY 007": 5, "HY 009-1": 5, "HY 009-2": 5, 
-            "HY 010": 5, "HY 011-1": 5, "HY 011-2": 5, "HY 012": 5, "HY 015": 5, "HY 015-1": 5, 
-            "HY 016": 5, "HY 016-1": 5, "HY 017-1": 5, "HY 017-2": 5, "HY 018-1": 5, "HY 018-2": 5, 
-            "HY 019": 5, "HY 020-3": 5, "HY 020-4": 5, "HY 020-5": 5, "HY 021-1": 5, "HY 022-1": 5, 
-            "HY 025": 5, "HY 026-1": 5, "HY 027": 5, "HY 027-1": 5, "HY 029": 8, "HY 030-3": 7, 
-            "HY 031-4": 8, "HY 032": 5, "HY 032-1": 5, "HY 033": 5, "HY 037": 5, "HY 039-1": 5, 
-            "HY 040-1": 5, "HY 040-2": 5, "HY 040-3": 5, "HY 040-4": 5, "HY 040-6": 5, "HY 042": 5, 
-            "HY 045": 5, "HY 047-1": 5, "HY 047-2": 5, "HY 047-3": 5, "HY 048-1": 5, "HY 048-2": 5, 
-            "HY 049": 5, "HY 049-1": 9, "HY 055-4": 5, "HY 055-5": 5, "HY 055-6": 5, "HY 055-7": 5, 
-            "HY 056": 5, "HY 057-2": 5, "HY 058-1": 5, "HY 060": 5, "HY 060-1": 5, "HY 061": 5, 
-            "HY 061-1": 5, "HY 062": 5, "HY 062-1": 5, "HY 066-2": 5, "HY 076": 5, "HY 077": 5, 
-            "HW-01": 5, "LA-01": 5, "LB 01-1": 5, "LB-01": 5, "LB -03": 6, "LB-11-1": 5.5, 
-            "LB-11": 5.5, "LB-12": 5.8, "LC 01": 5, "LC 01-1": 5, "LC C-04": 5, "LC 05": 5, 
-            "LC 05-1": 5, "LC 09": 5, "LC A-2402": 5, "LC A-2402D": 5, "LC A-2403": 5, 
-            "LC AM14-1": 5, "LC B2404": 5, "LC B-2426": 5, "LC B-2426-1": 5, "LC C-02": 5.5, 
-            "LC C-02-1": 5, "LC C-07": 5, "LC C07-1": 5, "LC C-09": 5, "LC C-09-1": 5, "LC C-55": 6, 
-            "LC C-55-1": 6, "LC D-08": 5, "LC D-08-1": 5, "LC D-55": 6, "LC D-55-1": 6, 
-            "LC LA 08": 5, "LC LB 03": 5, "LC M-11": 5, "LC M14-2": 5, "LC M-15": 7, "LC M-15D": 6, 
-            "LC M-75": 6, "LC M-76": 5, "LC M99": 11, "LC M99-1": 6, "LC M99-2": 5.5, "LC PW33": 5, 
-            "LC W-06": 5, "LC W15": 5, "LC W-15": 5, "LC W72-3": 5, "LC W-801": 5, "LC W-99": 5, 
-            "LC W-99-1": 7, "LC W99-2": 5, "LO 024": 5, "LO 043": 5, "LO 078-5": 5, "M-60": 5, 
-            "NM-99": 12.3, "PW33": 6, "RS 105": 6, "RS 106": 13, "RS 107": 5.8, "RS 108": 7, 
-            "RS 109": 6.2, "RS 110": 13.6, "RS 111": 9, "RS 112": 5, "RS 113": 5, "RS 115": 5, 
-            "RS 115-1": 5, "RS 119": 5, "RS 123": 8, "RS 123-1": 8, "RS 125": 10, "RS 126": 5, 
-            "RS 133": 5.4, "RS 202": 7, "RS A1": 5, "RS A2": 11, "RS A2-1": 5.2, "RS A3": 10, 
-            "SM 99-1": 7.4, "SM 99-3": 8, "SM 99-4": 8, "SM 99-5": 8, "SM 99-8": 8, 
-            "TIB-01": 5, "LC W-63": 13, "LC W-90": 5
-        };
+        // --- MANEJO DINÁMICO DE GANANCIAS ---
+        // Este objeto servirá como "Semilla" o respaldo si Firebase está vacío.
+        const DEFAULT_PROFIT_DB = { "HY 001": 5.5, "HY 002-1": 5.5, "HY 002-3": 5.5, "HY 003-1": 5.5, "HY 006-1": 5.5, "LC C-04": 6.5, "HY 007": 5.5, "HY 009-1": 5.5, "HY 009-2": 5.5, "HY 010": 5.5, "HY 011-1": 5.5, "HY 011-2": 5.5, "LC 05": 5.5, "HY 013": 5.5, "LC 07-1": 5.5, "HY 015": 5.5, "HY 015-1": 5.5, "HY 016": 5.5, "HY 016-1": 5.5, "HY 017-1": 5.5, "HY 017-2": 5.5, "HY 018-1": 5.5, "HY 018-2": 5.5, "HY 019": 5.5, "HY 020-1": 6.5, "LC LB 03": 7.5, "HY 020-3": 5.5, "LC PW33": 6.5, "HY 020-5": 5.5, "HY 021-1": 5.5, "HY 022-1": 5.5, "LC W15": 5.5, "HY 026-1": 5.5, "HY 027": 7.5, "LC W72-3": 6.5, "HY 028-4": 5.5, "HY 029-1": 10.5, "HY 030-3": 5.5, "HY 031-4": 10.5, "HY 032": 5.5, "HY 032-1": 5.5, "HY 033": 5.5, "HY 035": 5.5, "HY 037-1": 5.5, "HY 038-1": 6.5, "HY 038-2": 6.5, "HY 039-1": 6.5, "HY 040-1": 5.5, "HY 040-2": 5.5, "HY 040-3": 5.5, "HY 040-4": 5.5, "HY 040-6": 5.5, "HY 042": 5.5, "HY 045": 5.5, "HY 046-1": 5.5, "HY 047-1": 4.0, "HY 047-2": 5.5, "HY 047-3": 5.5, "HY 048-1": 5.5, "HY 048-2": 5.5, "HY 049": 5.5, "HY 049-1": 11.5, "HY 055-4": 6.5, "HY 055-5": 6.5, "HY 055-6": 6.5, "HY 055-7": 6.5, "HY 056": 5.5, "HY 058-1": 5.5, "HY 060": 6.5, "HY 060-3": 5.5, "HY 060-1": 5.5, "HY 061-1": 5.5, "HY 062": 5.5, "HY 066": 5.5, "HY 066-1": 5.5, "HY 066-2": 8.5, "HY 067-3": 5.5, "HY 068": 5.5, "HY 076": 5.5, "HY 077": 5.5, "LC LA 08": 5.5, "LC A-2402": 5.5, "LC A-2402D": 5.5, "LC A-2403": 6.5, "LC AM14-1": 5.5, "LC B-2426-1": 5.5, "LC B-2426": 5.5, "LC C-02-1": 9.5, "LC C-02": 9.5, "LC C-09D": 5.5, "LC C-09": 5.5, "LC C-55-1": 7.5, "LC C-55": 7.5, "LC D-08-1": 5.5, "LC D-08": 5.5, "LC D-55-1": 7.5, "LC D-55": 7.5, "LC M14-2": 5.5, "LC M-15D": 5.5, "LC M-75": 6.5, "LC M-76": 5.5, "LC M-99-1": 8.5, "LC W-801": 6.5, "LC W-99-1": 8.5, "LC W-99": 7.5, "G 008B": 5.5, "G 148": 6.5, "RS 101": 8.5, "RS 102": 8.9, "RS 103": 8.5, "RS 105": 8.5, "RS 106": 15.5, "RS 107": 8.3, "RS 108": 9.5, "RS 109": 8.7, "RS 110": 16.1, "RS 111": 11.5, "RS 112": 5.5, "RS 113": 7.5, "RS 115": 6.5, "LC 01": 5.5, "RS 118": 6.5, "RS 119": 7.5, "RS 121": 8.5, "RS 123": 10.5, "RS 125": 11.5, "LC W-06": 5.5, "RS 133": 5.5, "RS 202": 9.5, "RS A1": 5.5, "RS A2": 5.7, "RS A2-1": 5.5, "RS A3": 5.9, "LC B2404": 6.5, "RS A7": 9.5, "RS A8": 9.3, "RS A9": 8.5, "RS A10": 8.0, "LO 020": 5.5, "LO 078-5": 5.5, "LO 043": 5.5, "SM 99-1": 10.5, "SM 99-3": 10.5, "SM 99-4": 10.5, "SM 99-5": 10.5, "SM 99-8": 10.5, "M-15": 9.5, "LO 024": 7.5 };
 
-        // LOGIN
+        // Esta variable se usará en vivo. Si no hay datos en Firebase, usa DEFAULT_PROFIT_DB.
+        let profitMap = {};
+
+        // 4. AUTENTICACIÓN
         auth.onAuthStateChanged(user => {
-            if (user) { document.getElementById('loginOverlay').style.display = 'none'; startSystem(); } 
-            else { 
+            if (user) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                startSystem(); 
+                const d=document.createElement('div');d.className='toast success';d.innerHTML='<i class="fa-solid fa-check"></i> Bienvenido';document.getElementById('toast-container').appendChild(d);setTimeout(()=>d.remove(),3000);
+            } else {
                 document.getElementById('loginOverlay').style.display = 'flex';
-                const s = localStorage.getItem('localLogo'); if(s) document.getElementById('loginLogo').src = s;
+                const savedLogo = localStorage.getItem('localLogo');
+                if(savedLogo) {
+                    document.getElementById('loginLogo').src = savedLogo;
+                    document.getElementById('loginLogo').style.display = 'block';
+                }
             }
         });
-        window.appLogin = function() {
-            const e = document.getElementById('txtEmail').value, p = document.getElementById('txtPass').value, btn = document.getElementById('btnLogin');
-            if(!e || !p) return document.getElementById('loginError').innerText = "Faltan datos.";
-            btn.innerText = "Verificando..."; btn.disabled = true;
-            auth.signInWithEmailAndPassword(e, p).catch(er => { btn.innerText = "INGRESAR"; btn.disabled = false; document.getElementById('loginError').innerText = "Error de credenciales."; });
+
+       window.appLogin = function() {
+            const e = document.getElementById('txtEmail').value;
+            const p = document.getElementById('txtPass').value;
+            const btn = document.getElementById('btnLogin');
+            const err = document.getElementById('loginError');
+            if(!e || !p) { err.innerText = "Ingrese correo y contraseña."; err.style.display = 'block'; return; }
+            btn.innerText = "Verificando..."; btn.disabled = true; err.style.display = 'none';
+            auth.signInWithEmailAndPassword(e, p).catch(error => {
+                    btn.innerText = "INGRESAR AL SISTEMA"; btn.disabled = false;
+                    let msg = "Error de acceso.";
+                    if(error.code === 'auth/wrong-password') msg = "Contraseña incorrecta.";
+                    if(error.code === 'auth/user-not-found') msg = "Usuario no registrado.";
+                    err.innerText = msg; err.style.display = 'block';
+            });
         }
 
+        // 5. INICIO DE SISTEMA Y CARGA DE DATOS
         function startSystem() {
+            // Cargar Config
             dbRef.ref('config').on('value', s => { 
-                if(s.val()) { config=s.val(); applyConfig(); localStorage.setItem('localLogo', config.logo||""); window.updateAllViews(); }
+                if(s.val()){ 
+                    config=s.val(); 
+                    applyConfig(); 
+                    if(config.logo) localStorage.setItem('localLogo', config.logo);
+                    window.updateAllViews(); 
+                } else { saveConfig(); } 
             });
+
+            // Cargar Inventario
             dbRef.ref('inventory').on('value', s => { 
-                db = s.val() || []; if(!s.val()) loadInitialCatalog(); 
-                window.updateAllViews(); renderProfitConfigTable(); document.getElementById('loader').style.display='none'; 
+                db = s.val() || []; 
+                if(!s.val()) saveInitialData(); 
+                window.updateAllViews(); 
+                renderProfitConfigTable(); // Actualizar tabla de edición si cambia inventario
+                document.getElementById('loader').style.display='none'; 
             });
-            dbRef.ref('history').on('value', s => { history = s.val() ? Object.values(s.val()).sort((a,b)=>b.id-a.id) : []; renderHistory(); if(document.getElementById('view-profit').classList.contains('active')) renderProfit(); });
-            
-            // CARGA DE GANANCIAS
+
+            // Cargar Historial
+            dbRef.ref('history').on('value', s => { 
+                history = s.val() ? Object.values(s.val()).sort((a,b)=>b.id-a.id) : []; 
+                renderHistory(); 
+                if(document.getElementById('view-profit') && document.getElementById('view-profit').classList.contains('active')) renderProfit(); 
+            });
+
+            // NUEVO: CARGAR TABLA DE GANANCIAS DE FIREBASE
             dbRef.ref('profits').on('value', s => {
                 const val = s.val();
-                if (val) profitMap = val; else { profitMap = DEFAULT_PROFIT_DB; dbRef.ref('profits').set(DEFAULT_PROFIT_DB); }
+                if (val) {
+                    // Si hay datos en la nube, los usamos
+                    profitMap = val;
+                } else {
+                    // Si no hay datos (primera vez con el nuevo sistema), usamos los hardcodeados y subimos a la nube
+                    profitMap = DEFAULT_PROFIT_DB;
+                    dbRef.ref('profits').set(DEFAULT_PROFIT_DB);
+                }
+                // Si la pestaña ganancias está activa, recalcular
                 if(document.getElementById('view-profit').classList.contains('active')) renderProfit();
-                renderProfitConfigTable();
+                // Si la pestaña configuración está activa, actualizar tabla de edición
+                if(document.getElementById('view-config').classList.contains('active')) renderProfitConfigTable();
             });
         }
 
-        // FUNCIONALIDADES
+        // --- OPTIMIZACIÓN DE BÚSQUEDA ---
         let searchTimer;
-        window.searchDelay = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { window.updateAllViews(); }, 300); }
-        window.updateAllViews = () => { renderPOS(); renderInv(); }
-
-        window.loadDefaultProfitList = function() {
-            if(confirm("⚠️ ¿Deseas SOBRESCRIBIR la tabla de ganancias actual con la nueva lista del PDF?\n\nEsto borrará cambios manuales de ganancias y pondrá los valores del documento reciente.")) {
-                dbRef.ref('profits').set(DEFAULT_PROFIT_DB).then(() => {
-                    Toast.show("Lista del PDF Cargada Exitosamente", "success");
-                    renderProfitConfigTable();
-                });
-            }
+        window.searchDelay = function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => { window.updateAllViews(); }, 300);
         }
 
+        window.updateAllViews = function() {
+            renderPOS();
+            renderInv();
+        }
+
+        // --- FUNCIONES CONFIG Y UTILIDADES ---
+        window.compressAndPreview = function(file, imgPreviewId, hiddenInputId) {
+            if(!file || !file.type.startsWith('image/')) return;
+            const reader = new FileReader(); reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image(); img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); const maxSize = 500;
+                    let width = img.width; let height = img.height;
+                    if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } } else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById(imgPreviewId).src = dataUrl; document.getElementById(imgPreviewId).style.display = 'block';
+                    document.getElementById(hiddenInputId).value = dataUrl;
+                    if(imgPreviewId === 'imgPreview') { document.getElementById('dropZone').classList.add('has-img'); }
+                    Toast.show("Imagen optimizada correctamente", "success");
+                }
+            }
+        };
+
+        window.saveProduct = function() {
+            const id=document.getElementById('prodId').value;
+            const obj={
+                c:document.getElementById('pCode').value, m:document.getElementById('pModel').value, 
+                cat:document.getElementById('pCat').value, d:parseFloat(document.getElementById('pPrice').value)||0,
+                stock:parseInt(document.getElementById('pStock').value)||0, t:document.getElementById('pSize').value,
+                img:document.getElementById('prodImgBase64').value
+            };
+            let newDb=[...db]; 
+            if(id) { const i=newDb.findIndex(x=>x.id==id); if(i!==-1) newDb[i]={...newDb[i],...obj}; } 
+            else { newDb.unshift({...obj, id:Date.now()}); }
+            dbRef.ref('inventory').set(newDb).then(()=>{ closeModal('modalProd'); Toast.show("Producto Guardado"); });
+        }
+
+        window.processSale = function() {
+            if(cart.length===0) return alert("El carrito está vacío");
+            const nm=document.getElementById('cartClientName').value.trim(); if(!nm) return alert("Ingrese Nombre del Cliente");
+            let tot=0, desc="", snap=JSON.parse(JSON.stringify(cart));
+            cart.forEach(i=>{
+                tot+=i.total; desc+=`${i.qtyTxt} ${i.c}, `;
+                const p=db.find(x=>x.id==i.pId); if(p) p.stock-=i.deduct;
+            });
+            dbRef.ref('inventory').set(db); 
+            const rec={id:Date.now(), date:new Date().toLocaleString(), client:nm, phone:document.getElementById('cartClientPhone').value, total:tot, items:snap, desc:desc};
+            dbRef.ref('history').push(rec);
+            printFromData(rec);
+            cart=[]; document.getElementById('cartClientName').value=""; document.getElementById('cartClientPhone').value="";
+            renderCart(); toggleCart();
+        }
+
+        window.saveConfig = function() {
+            config.name = document.getElementById('cfgName').value; config.sub = document.getElementById('cfgSub').value;
+            config.tel = document.getElementById('cfgTel').value; config.currency = document.getElementById('cfgCurrency').value;
+            config.footer = document.getElementById('cfgFooter').value; config.color = document.getElementById('cfgColor').value;
+            config.banner = document.getElementById('cfgBanner').value; config.maintenance = document.getElementById('cfgMaintenance').checked;
+            const l=document.getElementById('cfgLogoData').value; if(l) config.logo=l;
+            dbRef.ref('config').set(config).then(()=>Toast.show("Personalización Guardada", "success"));
+        }
+
+        // --- NUEVA LÓGICA DE EDICIÓN DE COSTOS (TABLA) ---
+        
+        // Renderiza la tabla de edición en Configuración
         window.renderProfitConfigTable = function() {
             const container = document.getElementById('profitConfigBody');
             const search = document.getElementById('profitSearchInput').value.toLowerCase().trim();
             container.innerHTML = "";
+
+            // 1. Obtener una lista única de TODOS los códigos (De Inventory y de la lista de ganancias)
+            // Esto asegura que si agregas un producto nuevo al inventario, aparezca aquí para ponerle precio
             const inventoryCodes = db.map(p => p.c.trim());
             const profitCodes = Object.keys(profitMap);
             const allCodes = [...new Set([...inventoryCodes, ...profitCodes])].sort();
 
             allCodes.forEach(code => {
+                // Filtrado por buscador
                 if (search && !code.toLowerCase().includes(search)) return;
-                const val = profitMap[code] || 0;
+
+                // Valor actual (o 0 si es nuevo)
+                const currentVal = profitMap[code] || 0;
+                
+                // Buscar si existe en inventario para mostrar nombre
                 const product = db.find(p => p.c.trim() === code);
-                const details = product ? `<small style="color:#888;">${product.m}</small>` : `<small style="color:#d32f2f;">Solo en Histórico</small>`;
+                const details = product ? `<small style="color:#888; display:block;">${product.m}</small>` : `<small style="color:#d32f2f; display:block;">No en stock (Solo histórico)</small>`;
+
                 const row = document.createElement('tr');
-                row.innerHTML = `<td style="padding:10px; border-bottom:1px solid #f0f0f0;"><span style="font-weight:bold;">${code}</span><br>${details}</td><td style="padding:10px; text-align:right; border-bottom:1px solid #f0f0f0;"><input type="number" class="profit-input" data-code="${code}" value="${val}" step="0.1"></td>`;
+                row.innerHTML = `
+                    <td style="padding:10px; border-bottom:1px solid #f0f0f0;">
+                        <span style="font-weight:bold; color:var(--dark);">${code}</span>
+                        ${details}
+                    </td>
+                    <td style="padding:10px; text-align:right; border-bottom:1px solid #f0f0f0;">
+                        <input type="number" class="profit-input" data-code="${code}" value="${currentVal}" step="0.1" style="width:80px; text-align:center; padding:5px; border-radius:5px; border:1px solid #ddd;">
+                    </td>
+                `;
                 container.appendChild(row);
             });
         }
 
+        // Guarda los cambios hechos en la tabla a Firebase
         window.saveProfitTable = function() {
-            let newMap = { ...profitMap };
-            document.querySelectorAll('.profit-input').forEach(input => {
-                const code = input.getAttribute('data-code'), val = parseFloat(input.value);
-                if (!isNaN(val)) newMap[code] = val;
+            const inputs = document.querySelectorAll('.profit-input');
+            let newMap = {};
+            
+            // Recorre todos los inputs visibles (OJO: lo ideal es editar y guardar, si hay filtro el input no existe,
+            // así que debemos combinar con el mapa original para no perder datos ocultos por filtro)
+            
+            // Primero copiamos todo lo existente
+            newMap = { ...profitMap };
+
+            // Luego actualizamos con lo que esté en pantalla
+            inputs.forEach(input => {
+                const code = input.getAttribute('data-code');
+                const val = parseFloat(input.value);
+                if (!isNaN(val)) {
+                    newMap[code] = val;
+                }
             });
-            dbRef.ref('profits').set(newMap).then(() => { Toast.show("Tabla Actualizada"); });
+
+            // Guardar en Firebase
+            dbRef.ref('profits').set(newMap)
+                .then(() => {
+                    profitMap = newMap;
+                    Toast.show("Tabla de Ganancias Actualizada", "success");
+                    renderProfit(); // Refrescar reporte si estuviera visible
+                })
+                .catch(err => alert("Error al guardar: " + err.message));
+        }
+
+        // --- CATALOG DATA RESTORE ---
+        function saveInitialData(){
+           // [MISMOS DATOS QUE EN TU ORIGINAL, COPIADOS POR BREVEDAD PARA QUE FUNCIONE IGUAL]
+            const initialData = [
+                // DAMA
+                {c:"W 15",m:"Croc Clasico Baby",d:46,t:"36-40",cat:"Dama"},{c:"LC W72-3",m:"Croc Decorado",d:32,t:"35-40",cat:"Dama"},{c:"LC W99-1",m:"Sandalia Fashion",d:48,t:"36-40",cat:"Dama"},
+                {c:"LC W-801",m:"Plataforma Barbie",d:35,t:"36-40",cat:"Dama"},{c:"LC M14-2",m:"Chancla Gatito/Vaca",d:38,t:"36-40",cat:"Dama"},{c:"HY 047-1",m:"Croc Bicolor 1",d:42,t:"36-40",cat:"Dama"},
+                {c:"HY 047-2",m:"Croc Bicolor 2",d:42,t:"36-40",cat:"Dama"},{c:"HY 047-3",m:"Croc con Peluche",d:47,t:"36-40",cat:"Dama"},{c:"HY 040-1",m:"Croc Kuromi",d:32,t:"36-40",cat:"Dama"},
+                {c:"HY 040-3",m:"Croc Accesorios",d:33,t:"36-40",cat:"Dama"},{c:"HY 040-4",m:"Croc Cadena Oro",d:34,t:"36-40",cat:"Dama"},{c:"HY 040-6",m:"Croc Perla/Oso",d:36,t:"36-40",cat:"Dama"},
+                {c:"HY 077",m:"Croc Hong Yuan Flores",d:34,t:"36-40",cat:"Dama"},{c:"RS 111",m:"Croc Cadena Negro",d:43,t:"36-41",cat:"Dama"},{c:"RS 110",m:"Croc Grueso Fashion",d:50,t:"36-41",cat:"Dama"},
+                {c:"RS 109",m:"Croc Geométrico",d:39,t:"36-41",cat:"Dama"},{c:"RS 112",m:"Croc Plataforma Alta",d:31,t:"36-41",cat:"Dama"},{c:"RS 107",m:"Sueco Cerrado Liso",d:44,t:"36-41",cat:"Dama"},
+                {c:"RS 202",m:"Sueco Hebilla",d:35,t:"36-41",cat:"Dama"},{c:"HY 056",m:"Croc Puntera Love",d:35,t:"36-40",cat:"Dama"},{c:"RS 123",m:"Chancla Nike Style",d:35,t:"36-41",cat:"Dama"},
+                {c:"HY 032",m:"Plataforma Arrugada",d:43,t:"36-40",cat:"Dama"},{c:"HY 032-1",m:"Plataforma Lazo",d:47,t:"36-40",cat:"Dama"},{c:"HY 011-2",m:"Plataforma Textura",d:41,t:"36-40",cat:"Dama"},
+                {c:"RS A9",m:"Yeezy Style Slide",d:34,t:"36-41",cat:"Dama"},{c:"HY 006-1",m:"Chancla Cadena Strass",d:42,t:"36-40",cat:"Dama"},{c:"LB - 03",m:"Sandalia Doble Tira",d:35,t:"36-40",cat:"Dama"},
+                {c:"HY 006-2",m:"Chancla Cadena Oso",d:42,t:"36-40",cat:"Dama"},{c:"HY 011-1",m:"Plataforma Flor",d:47,t:"36-40",cat:"Dama"},{c:"HY 002-1",m:"Chancla Vaca (Forro)",d:36,t:"36-40",cat:"Dama"},
+                {c:"HY 002-3",m:"Chancla Estampada",d:40,t:"36-40",cat:"Dama"},{c:"HY 001",m:"Chancla Nube Lisa",d:41,t:"36-40",cat:"Dama"},{c:"LC W99",m:"Chancla Brillo",d:48,t:"36-40",cat:"Dama"},
+                {c:"RS A2",m:"Yeezy Estampado",d:36,t:"36-41",cat:"Dama"},{c:"RS A2-1",m:"Chancla Lazo Minnie",d:34,t:"36-41",cat:"Dama"},{c:"LC B-2426-1",m:"Sandalia Dedo Lisa Pastel",d:30,t:"36-40",cat:"Dama"},
+                {c:"HY 028-4",m:"Hawaiana Flores",d:30,t:"36-40",cat:"Dama"},{c:"PW 33-1",m:"Hawaiana Transparente",d:30,t:"36-41",cat:"Dama"},{c:"HY 022",m:"Chancla Cruzada Acolchada",d:42,t:"36-40",cat:"Dama"},
+                {c:"HY 058-1",m:"Sandalia Doble Lazo",d:45,t:"36-40",cat:"Dama"},{c:"HY 029",m:"Sandalia Sport Ajustable",d:56,t:"36-40",cat:"Dama"},
+                {c:"W-06",m:"Hawaiana Dedo Caballero",d:28,t:"36-40",cat:"Dama"},{c:"LC B-2426",m:"Sandalia Dedo Oscura",d:30,t:"36-40",cat:"Dama"},{c:"HY 060",m:"Croc Bicolor Casual",d:44,t:"36-40",cat:"Dama"},
+                {c:"W-99-2",m:"Chancla Franjas",d:36,t:"36-40",cat:"Dama"},
+                // CABALLERO
+                {c:"LC M-15D",m:"Croc Camuflaje",d:52,t:"40-45",cat:"Caballero"},{c:"M-15",m:"Croc Linea Amarilla",d:50,t:"40-45",cat:"Caballero"},{c:"LA-08",m:"Chancla Adidas Logo",d:38,t:"40-45",cat:"Caballero"},
+                {c:"SM 99-3",m:"Chancla Banda Ancha",d:45,t:"40-45",cat:"Caballero"},{c:"LC M-76",m:"Croc 'M' Hebilla",d:35,t:"40-45",cat:"Caballero"},{c:"LC M-75",m:"Croc 'M' Liso",d:34,t:"40-45",cat:"Caballero"},
+                {c:"M-60",m:"Chancla Logo Lateral",d:38,t:"40-45",cat:"Caballero"},{c:"LC M-99-1",m:"Sandalia Tiras",d:48,t:"40-45",cat:"Caballero"},{c:"SM 99-8",m:"Chancla Banda Logo",d:45,t:"40-45",cat:"Caballero"},
+                {c:"SM 99-5",m:"Chancla 'Sport'",d:45,t:"40-45",cat:"Caballero"},{c:"SM 99-4",m:"Chancla 'Just Do It'",d:45,t:"40-45",cat:"Caballero"},{c:"M99-2",m:"Chancla 3 Franjas",d:38,t:"40-45",cat:"Caballero"},
+                {c:"RS 108",m:"Sueco Cerrado Sport",d:51,t:"40-45",cat:"Caballero"},{c:"HY 060-1",m:"Croc Salpicado",d:45,t:"36-40",cat:"Caballero"},{c:"HY 076",m:"Croc Todo Terreno",d:34,t:"40-45",cat:"Caballero"},
+                {c:"HY 045",m:"Croc Clásico Liso",d:31,t:"40-45",cat:"Caballero"},{c:"RS A3",m:"Yeezy Logo Color",d:41,t:"40-45",cat:"Caballero"},{c:"HY 016",m:"Yeezy Slide Lisa",d:36,t:"40-45",cat:"Caballero"},
+                {c:"HY 049-1",m:"Sandalia 'Sport' Letras",d:48,t:"40-45",cat:"Caballero"},{c:"LC A-2402",m:"Yeezy Estampado Tropical",d:36,t:"40-45",cat:"Caballero"},{c:"HY 016-1",m:"Yeezy Slide Camuflaje",d:46,t:"40-45",cat:"Caballero"},
+                {c:"HY 037",m:"Sandalia Slide Malla",d:38,t:"40-45",cat:"Caballero"},{c:"HY 010",m:"Yeezy Texture",d:36,t:"40-45",cat:"Caballero"},{c:"LC AM14-1",m:"Yeezy Malla Fina",d:34,t:"40-45",cat:"Caballero"},
+                {c:"HY 033",m:"Sandalia Doble Hebilla Goma",d:35,t:"40-45",cat:"Caballero"},{c:"LC A-2403",m:"Yeezy Slide Textura",d:29,t:"40-45",cat:"Caballero"},{c:"LC A-2402D",m:"Yeezy Selva",d:45,t:"40-45",cat:"Caballero"},
+                {c:"LC M99",m:"Chancla Numero 23",d:50,t:"40-45",cat:"Caballero"},{c:"HY 007",m:"Sandalia Cuadros",d:30,t:"40-45",cat:"Caballero"},{c:"HY 049",m:"Sandalia Ajuste Lateral",d:50,t:"40-45",cat:"Caballero"},
+                {c:"RS 101",m:"Chancla Basket/Jordan",d:34,t:"40-45",cat:"Caballero"},{c:"HY 042",m:"Sandalia Dedo Sport",d:30,t:"40-45",cat:"Caballero"},{c:"HY 027",m:"Hawaiana Simple",d:30,t:"40-45",cat:"Caballero"},
+                {c:"HY 031-4",m:"Sandalia Franciscana",d:56,t:"40-45",cat:"Caballero"},
+                // NIÑO / NIÑA
+                {c:"LC C-09D",m:"Croc Infantil 3D",d:44,t:"30-35",cat:"Niño/Niña"},{c:"LC C-02-1",m:"Croc Pastel Dibujos",d:32,t:"30-35",cat:"Niño/Niña"},{c:"LC D-55-1",m:"Sandalia Banda Dibujos",d:32,t:"24-29",cat:"Niño/Niña"},
+                {c:"LC C-55-1",m:"Chancla Banda Ancha Kids",d:33,t:"30-35",cat:"Niño/Niña"},{c:"LC C-07-1",m:"Croc Animalitos",d:30,t:"30-35",cat:"Niño/Niña"},{c:"LC C-04",m:"Croc Textura Cesta",d:33,t:"30-35",cat:"Niño/Niña"},
+                {c:"LC 05",m:"Chancla Nike Kids",d:32,t:"30-35",cat:"Niño/Niña"},{c:"RS 106",m:"Croc Mickey",d:35,t:"25-30",cat:"Niño/Niña"},{c:"RS 133",m:"Croc Kuromi/Cereza",d:31,t:"30-35",cat:"Niño/Niña"},
+                {c:"HY 038-1",m:"Croc Pequeños Dibujos",d:27,t:"24-29",cat:"Niño/Niña"},{c:"HY 039-1",m:"Croc Niña Muñeca",d:29,t:"30-35",cat:"Niño/Niña"},{c:"RS 119",m:"Croc Ondulado Hello Kitty",d:27,t:"25-30",cat:"Niño/Niña"},
+                {c:"RS 113",m:"Croc Perlas/Flores",d:33,t:"30-35",cat:"Niño/Niña"},{c:"HY 009-1",m:"Croc Bebidas/Frutas",d:33,t:"30-35",cat:"Niño/Niña"},{c:"HY 017-1",m:"Croc Bebe Flor/Estrella",d:27,t:"19-24",cat:"Niño/Niña"},
+                {c:"HY 018-1",m:"Croc Forma Auto",d:30,t:"24-29",cat:"Niño/Niña"},{c:"HY 003-1",m:"Chancla Vaquita Niños",d:32,t:"30-35",cat:"Niño/Niña"},{c:"LC D-08-1",m:"Hawaiana Bebe Animales",d:29,t:"24-29",cat:"Niño/Niña"},
+                {c:"LO 024",m:"Chancla Bob Esponja",d:33,t:"30-35",cat:"Niño/Niña"},{c:"RS A1",m:"Yeezy Kids Liso",d:28,t:"30-35",cat:"Niño/Niña"},{c:"LO 020",m:"Chancla Hello Kitty",d:26,t:"30-35",cat:"Niño/Niña"},
+                {c:"HY 055-4",m:"Bota Lluvia Moño",d:36,t:"24-29",cat:"Niño/Niña"},{c:"HY 055-7",m:"Bota Lluvia Gato",d:40,t:"30-35",cat:"Niño/Niña"},{c:"HY 019",m:"Sandalia Vaquita Tela",d:39,t:"18-23",cat:"Niño/Niña"},
+                {c:"HY 013-1",m:"Sandalia Bebe Tiras",d:27,t:"19-24",cat:"Niño/Niña"},{c:"HY 020-3",m:"Sandalia Sport Niña",d:50,t:"24-29",cat:"Niño/Niña"},{c:"HY 015-1",m:"Sandalia Hebilla Bebe",d:29,t:"25-30",cat:"Niño/Niña"},
+                {c:"HY 030-3",m:"Sandalia Sport Print",d:55,t:"30-35",cat:"Niño/Niña"},{c:"HY 020-1",m:"Sandalia Sport Clasica",d:31,t:"24-29",cat:"Niño/Niña"},{c:"HY 026",m:"Sandalia Ositos",d:40,t:"30-35",cat:"Niño/Niña"},
+                {c:"LO 078-5",m:"Sandalia Mariposa/Cadena",d:35,t:"24-29",cat:"Niño/Niña"},
+                {c:"LC 01",m:"Croc Mario/Juegos",d:31,t:"30-35",cat:"Niño/Niña"},{c:"C-07",m:"Croc Dinosaurio",d:29,t:"30-35",cat:"Niño/Niña"},{c:"LC C-09",m:"Croc Raya Lateral",d:44,t:"24-29",cat:"Niño/Niña"},
+                {c:"LC C-02",m:"Croc Personaje Urbano",d:32,t:"30-35",cat:"Niño/Niña"},{c:"LC D-08",m:"Hawaiana Niño",d:29,t:"24-29",cat:"Niño/Niña"},{c:"HY 017-2",m:"Croc Bebe Espacio",d:27,t:"19-24",cat:"Niño/Niña"},
+                {c:"HY 018-2",m:"Croc Auto Gris/Azul",d:30,t:"24-29",cat:"Niño/Niña"},{c:"HY 038-2",m:"Croc Niño Dinosaurio",d:27,t:"24-29",cat:"Niño/Niña"},{c:"HY 009-2",m:"Croc Niño Oscuro",d:33,t:"30-35",cat:"Niño/Niña"},
+                {c:"LO 043",m:"Chancla Ciudad",d:31,t:"24-29",cat:"Niño/Niña"},{c:"G 008B",m:"Chancla Oso Militar",d:31,t:"30-35",cat:"Niño/Niña"},{c:"LC D-55",m:"Sandalia Niño 3D",d:32,t:"24-29",cat:"Niño/Niña"},
+                {c:"LC C-55",m:"Chancla Niño Dinosaurio/Pizza",d:33,t:"30-35",cat:"Niño/Niña"},{c:"HY 055-5",m:"Bota Lluvia Dino",d:36,t:"24-29",cat:"Niño/Niña"},{c:"HY 055-6",m:"Bota Lluvia Lobo",d:40,t:"30-35",cat:"Niño/Niña"},
+                {c:"HY 013",m:"Sandalia Tiras Oscuras",d:27,t:"19-24",cat:"Niño/Niña"},{c:"HY 015",m:"Sandalia Hebilla Oscura",d:29,t:"25-30",cat:"Niño/Niña"},{c:"HY 020-5",m:"Sandalia Sport Oscura",d:52,t:"24-29",cat:"Niño/Niña"},
+                {c:"HY 030-4",m:"Sandalia Sport Gris",d:55,t:"30-35",cat:"Niño/Niña"},{c:"HY 030-5",m:"Sandalia Sport Azul",d:55,t:"30-35",cat:"Niño/Niña"}
+            ];
+            const dbWithIDs = initialData.map((p,i)=>({...p, id:Date.now()+i, stock:72, p_unit:0}));
+            dbRef.ref('inventory').set(dbWithIDs).then(()=>{
+                db = dbWithIDs; Toast.show("Catálogo Cargado");
+                setTimeout(()=>nav('pos', document.querySelector('.nav-item.active')), 1500);
+            });
+        }
+        
+        window.reloadInitialData = function(){ if(confirm("¿Seguro que quieres restaurar la base de datos completa con los items del catálogo PDF? Esto borrará modificaciones de stock actuales.")){ saveInitialData(); } }
+        
+        // INTERFAZ Y RENDERIZADO
+        function applyConfig(){
+            document.documentElement.style.setProperty('--primary', config.color);
+            document.getElementById('brandName').innerText = config.name; 
+            document.getElementById('mobileTitleTxt').innerText = config.name.toUpperCase();
+            const subElem = document.getElementById('brandSubSidebar'); if(subElem) subElem.innerText = config.sub;
+            const footElem = document.getElementById('footerBrand'); if(footElem) footElem.innerText = "Sistema v9.5 - " + config.name;
+            document.getElementById('cfgName').value=config.name; document.getElementById('cfgSub').value=config.sub;
+            document.getElementById('cfgTel').value=config.tel; document.getElementById('cfgCurrency').value=config.currency;
+            document.getElementById('cfgFooter').value=config.footer; document.getElementById('cfgColor').value=config.color;
+            document.getElementById('cfgBanner').value=config.banner||""; document.getElementById('cfgMaintenance').checked=config.maintenance||false;
+            const b = document.getElementById('globalBanner'); 
+            if(config.banner){ b.innerText=config.banner; b.style.display='block'; } else { b.style.display='none'; }
+            if(config.logo){
+                ['displayLogoSidebar', 'mobileLogoImg', 'printLogoDisplay', 'cfgLogoPreview'].forEach(id=>{
+                    const el=document.getElementById(id); if(el){ el.src=config.logo; if(id!=='cfgLogoPreview') el.style.display='block'; }
+                });
+                document.getElementById('cfgLogoData').value=config.logo;
+            } else { document.getElementById('displayLogoSidebar').style.display = 'none'; }
+            
+            // Re-Render Profit Config table when navigating to config or after load, ensuring profitMap is ready
+            renderProfitConfigTable();
+        }
+
+        window.nav=(v,e)=>{ 
+            document.querySelectorAll('.view-panel').forEach(x=>x.classList.remove('active')); 
+            document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); 
+            document.getElementById('view-'+v).classList.add('active'); 
+            if(e) e.classList.add('active'); 
+            
+            // Actions on Nav
+            if(v==='pos' || v==='inv') window.updateAllViews();
+            if(v==='profit') renderProfit();
+            if(v==='config') renderProfitConfigTable();
         }
 
         function renderPOS(){
-            if(config.maintenance) return document.getElementById('posGrid').innerHTML=`<div style="padding:50px;text-align:center;"><h3>Tienda Cerrada</h3></div>`;
-            const g=document.getElementById('posGrid'), txt=document.getElementById('searchInput').value.toLowerCase();
-            let targetCat = document.querySelector('.chip.active')?.innerText || 'Todo';
-            if(targetCat === 'Todo') targetCat = 'all'; else if(targetCat==='Infantil') targetCat='Niño/Niña';
-
+            if(config.maintenance){ 
+                document.getElementById('posGrid').innerHTML=`<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fa-solid fa-store-slash" style="font-size:3rem; color:#aaa;"></i><h3>Tienda Cerrada Temporalmente</h3><p>Estamos actualizando nuestro inventario. Vuelva pronto.</p></div>`; 
+                return;
+            }
+            const g=document.getElementById('posGrid'); 
+            const txt=document.getElementById('searchInput').value.toLowerCase();
+            let targetCat = curFilter;
             const list=db.filter(p=>(p.c.toLowerCase().includes(txt)||p.m.toLowerCase().includes(txt))&&(targetCat==='all'||p.cat===targetCat));
-            list.sort((a,b) => a.cat.localeCompare(b.cat));
-            if(list.length===0) return g.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#999;margin-top:20px;">Sin resultados.</p>`;
-            g.innerHTML = list.map(p=> {
+            list.sort((a, b) => a.cat.localeCompare(b.cat));
+
+            if(list.length === 0){ g.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#999;margin-top:20px;">No se encontraron productos.</p>`; return; }
+            let htmlContent = "";
+            list.forEach(p=>{
                 const bg=p.cat==='Dama'?'#E91E63':(p.cat==='Caballero'?'#546E7A':'#FF9800');
                 const img=p.img||`https://placehold.co/300x300/eee/333?text=${p.c}`;
-                return `<div class="card" onclick="openSale(${p.id})"><div class="card-img-wrap"><img src="${img}" loading="lazy"><span class="badge-cat" style="background:${bg}">${p.cat.substring(0,4)}</span></div><div class="card-content"><div><h4>${p.c}</h4><p>${p.m}</p></div><div class="card-footer"><span class="stock">Stock: ${p.stock}</span><span class="price">${config.currency}${p.d}</span></div></div></div>`
-            }).join('');
+                htmlContent += `
+                <div class="card" onclick="openSale(${p.id})">
+                    <div class="card-img-wrap">
+                        <img src="${img}" loading="lazy">
+                        <span class="badge-cat" style="background:${bg}">${p.cat.substring(0,4)}</span>
+                    </div>
+                    <div class="card-content">
+                        <div>
+                            <h4>${p.c}</h4>
+                            <p>${p.m} <small>(${p.t})</small></p>
+                        </div>
+                        <div class="card-footer">
+                            <span class="stock">Disp: ${p.stock}</span>
+                            <span class="price">${config.currency}${p.d} <small style="font-size:0.6em;font-weight:400">/doc</small></span>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            g.innerHTML = htmlContent;
         }
 
-        window.filterCat=(c,el)=>{ document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); el.classList.add('active'); renderPOS(); }
+        window.filterCat=(c,el)=>{ curFilter=c; document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); el.classList.add('active'); window.updateAllViews(); }
         window.toggleCart=()=>{ document.getElementById('cartDrawer').classList.toggle('open'); document.getElementById('mainOverlay').classList.toggle('active'); renderCart(); }
-        
+
         window.openSale=function(id){ 
-            saleItem=db.find(x=>x.id==id); document.getElementById('saleTitle').innerText = `${saleItem.c}`; 
+            saleItem=db.find(x=>x.id==id); document.getElementById('saleTitle').innerText = `${saleItem.c} - ${saleItem.m}`; 
             document.getElementById('saleId').value=id; document.getElementById('saleQty').value=1; 
             window.setSaleType('doc'); document.getElementById('modalSale').style.display='flex'; 
         }
@@ -712,117 +979,172 @@
             ['doc','half','unit'].forEach(x=>{
                 document.getElementById('btn-'+x).style.background = x==t ? config.color : '#eee';
                 document.getElementById('btn-'+x).style.color = x==t ? 'white' : '#333';
-            }); 
-            const q=parseInt(document.getElementById('saleQty').value)||1, cur=config.currency; 
-            let p = saleMode==='doc' ? saleItem.d : (saleMode==='half' ? saleItem.d/2 : saleItem.d/12);
-            document.getElementById('unitPriceDisplay').innerText = `Base: ${cur}${p.toFixed(2)}`;
-            document.getElementById('saleTotalCalc').innerText = `${cur}${(p*q).toFixed(2)}`;
+            }); updateCalc(); 
         }
-        window.updateCalc = () => setSaleType(saleMode);
+
+        window.updateCalc=function(){ 
+            const q=parseInt(document.getElementById('saleQty').value)||1; const cur=config.currency; 
+            let p=0, txt=""; 
+            if(saleMode==='doc'){ p=saleItem.d; txt=`Precio Docena: ${cur}${p}`; } 
+            else if(saleMode==='half'){ p=saleItem.d/2; txt=`Precio Media Docena: ${cur}${p.toFixed(2)}`; } 
+            else { p = saleItem.d / 12; txt=`Precio Unitario (Par): ${cur}${p.toFixed(2)}`; } 
+            document.getElementById('unitPriceDisplay').innerText = txt; 
+            document.getElementById('saleTotalCalc').innerText = `${cur}${(p*q).toFixed(2)}`; 
+        }
+
         window.adjQty=(n)=>{ let v=parseInt(document.getElementById('saleQty').value)+n; if(v<1)v=1; document.getElementById('saleQty').value=v; updateCalc(); }
 
         window.confirmAdd = function() {
             const q = parseInt(document.getElementById('saleQty').value);
-            let deduction = saleMode === 'doc' ? 12 * q : (saleMode === 'half' ? 6 * q : q);
-            const inCart = cart.filter(item => item.pId === saleItem.id).reduce((sum, item) => sum + item.deduct, 0);
-            if ((deduction + inCart) > saleItem.stock) return alert(`Stock insuficiente (${saleItem.stock})`);
-            
+            let deduction = 0;
+            if(saleMode === 'doc') deduction = 12 * q; else if(saleMode === 'half') deduction = 6 * q; else deduction = q;
+            const alreadyInCart = cart.filter(item => item.pId === saleItem.id).reduce((sum, item) => sum + item.deduct, 0);
+            const totalRequired = deduction + alreadyInCart;
+            if (totalRequired > saleItem.stock) { alert(`⚠️ STOCK INSUFICIENTE\n\nDisponible: ${saleItem.stock} unidades.\nTratas de agregar ${deduction} más a los ${alreadyInCart} en carrito.`); return; }
             const t = parseFloat(document.getElementById('saleTotalCalc').innerText.replace(/[^0-9.]/g, ''));
-            let txt = saleMode === 'doc' ? 'Docenas' : (saleMode === 'half' ? 'Medias Doc' : 'Pares');
-            cart.push({ pId: saleItem.id, c: saleItem.c, m: saleItem.m, qtyTxt: `${q} ${txt}`, total: t, deduct: deduction });
-            closeModal('modalSale'); renderCart(); toggleCart(); Toast.show("Agregado");
+            let typeLabel = saleMode === 'doc' ? 'Docenas' : (saleMode === 'half' ? 'Medias Doc' : 'Pares');
+            cart.push({ pId: saleItem.id, c: saleItem.c, m: saleItem.m, qtyTxt: `${q} ${typeLabel}`, total: t, deduct: deduction });
+            closeModal('modalSale'); renderCart(); toggleCart(); Toast.show("Agregado al Carrito");
         }
 
         function renderCart(){ 
             const c=document.getElementById('cartContainer'); c.innerHTML=""; let t=0;
-            if(cart.length==0) c.innerHTML="<div style='text-align:center;padding:20px;color:#ccc'>Vacío</div>"; 
-            cart.forEach((i,x)=>{ t+=i.total; c.innerHTML+=`<div class="c-item"><div style="flex:1"><b>${i.c}</b><br><small>${i.qtyTxt}</small></div><div><b>${config.currency}${i.total.toFixed(2)}</b><i class="fa-solid fa-trash" style="color:#d32f2f;margin-left:10px;cursor:pointer;" onclick="cart.splice(${x},1);renderCart()"></i></div></div>` });
+            if(cart.length==0) c.innerHTML="<div style='text-align:center;color:#999;padding:20px;'><i class='fa-solid fa-basket-shopping' style='font-size:2rem;'></i><br>Vacío</div>"; 
+            cart.forEach((i,x)=>{
+                t+=i.total;
+                c.innerHTML+=`
+                <div class="c-item">
+                    <div style="flex:1"><b>${i.c}</b> <br><small>${i.qtyTxt} - ${i.m}</small></div>
+                    <div style="text-align:right">
+                        <b>${config.currency}${i.total.toFixed(2)}</b>
+                        <i class="fa-solid fa-trash" style="color:#d32f2f;margin-left:10px;cursor:pointer;" onclick="cart.splice(${x},1);renderCart()"></i>
+                    </div>
+                </div>`
+            });
             document.getElementById('cartTotalDisplay').innerText=`${config.currency}${t.toFixed(2)}`;
             document.getElementById('cartCountBadge').innerText=cart.length;
         }
 
-        window.processSale = function() {
-            if(cart.length===0) return; 
-            const nm=document.getElementById('cartClientName').value.trim(); if(!nm) return alert("Cliente requerido");
-            let tot=0, desc="", snap=JSON.parse(JSON.stringify(cart));
-            cart.forEach(i=>{ tot+=i.total; desc+=`${i.qtyTxt} ${i.c}, `; const p=db.find(x=>x.id==i.pId); if(p) p.stock-=i.deduct; });
-            dbRef.ref('inventory').set(db); 
-            dbRef.ref('history').push({id:Date.now(), date:new Date().toLocaleString(), client:nm, phone:document.getElementById('cartClientPhone').value, total:tot, items:snap, desc:desc});
-            printSale(nm, tot, snap); cart=[]; document.getElementById('cartClientName').value=""; renderCart(); toggleCart();
-        }
-
         function renderInv(){ 
-            const t=document.getElementById('invBody'); t.innerHTML=""; const txt = document.getElementById('searchInput').value.toLowerCase();
-            const list = db.filter(p => (p.c.toLowerCase().includes(txt) || p.m.toLowerCase().includes(txt))).sort((a, b) => a.cat.localeCompare(b.cat));
-            if(list.length === 0) return t.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#999">Vacío</td></tr>`;
-            t.innerHTML = list.map(p=> `<tr><td><img src="${p.img||''}" class="thumb"></td><td><b>${p.c}</b><small>${p.m}</small></td><td>${config.currency}${p.d}</td><td>${p.stock}</td><td><button class="btn" onclick="openEdit(${p.id})"><i class="fa-solid fa-pen"></i></button> <button class="btn" style="background:var(--primary);color:white" onclick="delProd(${p.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+            const t=document.getElementById('invBody'); t.innerHTML=""; const c=config.currency; 
+            const txt = document.getElementById('searchInput').value.toLowerCase(); let targetCat = curFilter;
+            const list = db.filter(p => (p.c.toLowerCase().includes(txt) || p.m.toLowerCase().includes(txt)) && (targetCat === 'all' || p.cat === targetCat));
+            list.sort((a, b) => a.cat.localeCompare(b.cat));
+            if(list.length === 0){ t.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No hay resultados en Inventario</td></tr>`; return; }
+            let htmlContent = "";
+            list.forEach(p=>{ 
+                const i=p.img||"https://placehold.co/50?text=?";
+                const catBadge = `<span style="font-size:0.7em; background:#eee; padding:2px 4px; border-radius:4px; margin-left:5px;">${p.cat}</span>`;
+                htmlContent+=`<tr>
+                    <td><img src="${i}" class="thumb"></td>
+                    <td><b>${p.c}</b>${catBadge}<br><small>${p.m}</small></td>
+                    <td>${c}${p.d}</td>
+                    <td>${p.stock} u.</td>
+                    <td>
+                        <button class="btn" style="background:#eee;color:#333;width:auto;padding:5px 10px;" onclick="openEdit(${p.id})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn" style="background:var(--primary);color:white;width:auto;padding:5px 10px;" onclick="delProd(${p.id})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`
+            });
+            t.innerHTML = htmlContent;
         }
 
         window.openEdit=(id)=>{ 
-            const p=db.find(x=>x.id==id); document.getElementById('prodId').value=p.id; 
-            ['Code','Model','Price','Stock','Cat','Size'].forEach(k => document.getElementById('p'+k).value = k==='Cat' ? p.cat : (k==='Size' ? p.t : (k==='Code' ? p.c : (k==='Model' ? p.m : (k==='Price' ? p.d : p.stock)))));
-            document.getElementById('prodImgBase64').value=p.img||""; 
+            const p=db.find(x=>x.id==id);
+            document.getElementById('prodId').value=p.id; document.getElementById('pCode').value=p.c; document.getElementById('pModel').value=p.m;
+            document.getElementById('pPrice').value=p.d; document.getElementById('pStock').value=p.stock; document.getElementById('pCat').value=p.cat; 
+            document.getElementById('pSize').value=p.t || "Unica"; document.getElementById('prodImgBase64').value=p.img||""; 
+            if(p.img){ document.getElementById('imgPreview').src=p.img; document.getElementById('imgPreview').style.display='block'; }
             document.getElementById('modalProd').style.display='flex'; 
         }
 
-        window.openModalProd=()=>{ document.querySelectorAll('#modalProd input').forEach(i=>i.value=""); document.getElementById('modalProd').style.display='flex'; }
-        window.saveProduct = function() {
-            const id=document.getElementById('prodId').value, obj={c:document.getElementById('pCode').value, m:document.getElementById('pModel').value, cat:document.getElementById('pCat').value, d:parseFloat(document.getElementById('pPrice').value), stock:parseInt(document.getElementById('pStock').value), t:document.getElementById('pSize').value, img:document.getElementById('prodImgBase64').value};
-            let newDb=[...db]; if(id) { const i=newDb.findIndex(x=>x.id==id); if(i!==-1) newDb[i]={...newDb[i],...obj}; } else { newDb.unshift({...obj, id:Date.now()}); }
-            dbRef.ref('inventory').set(newDb).then(()=>{ closeModal('modalProd'); Toast.show("Guardado"); });
+        window.openModalProd=()=>{ 
+            ['pCode','pModel','pPrice','pStock','prodImgBase64','pSize'].forEach(k=>document.getElementById(k).value=""); 
+            document.getElementById('prodId').value=""; document.getElementById('imgPreview').style.display='none'; 
+            document.getElementById('modalProd').style.display='flex'; 
         }
-        window.delProd=(id)=>{ if(confirm("¿Eliminar?")) dbRef.ref('inventory').set(db.filter(x=>x.id!=id)); }
-        
+
+        window.delProd=(id)=>{ if(confirm("¿Eliminar este producto?")) dbRef.ref('inventory').set(db.filter(x=>x.id!=id)); }
+
         function renderHistory() {
-            const t = document.getElementById('histBody'); t.innerHTML = ""; let g = 0;
-            history.forEach(h => { g += h.total; t.innerHTML += `<tr><td>${h.date.split(',')[0]}</td><td><b>${h.client}</b></td><td><button class="btn" onclick="alert('${h.desc}')">Ver</button></td><td>${config.currency}${parseFloat(h.total).toFixed(2)}</td><td><i class="fa-solid fa-trash" style="cursor:pointer" onclick="delHist(${h.id})"></i></td></tr>`; });
-            document.getElementById('grandTotalHistory').innerText = `${config.currency}${g.toFixed(2)}`;
+            const t = document.getElementById('histBody'); t.innerHTML = ""; let g = 0; const c = config.currency;
+            history.forEach(h => {
+                g += h.total;
+                t.innerHTML += `<tr>
+                    <td><small>${h.date.split(',')[0]}</small></td><td><b>${h.client}</b></td>
+                    <td><button class="btn" style="padding:4px 10px; font-size:0.7rem; background:#f0f0f0; color:#555; width:auto; box-shadow:none;" onclick="alert('${h.desc}')">Ver Items</button></td>
+                    <td style="font-weight:bold; color:var(--dark);">${c}${parseFloat(h.total).toFixed(2)}</td>
+                    <td>
+                        <i class="fa-solid fa-print" style="color:var(--primary);cursor:pointer;margin-right:10px;" onclick="reprint(${h.id})" title="Imprimir"></i> 
+                        <i class="fa-solid fa-trash" style="color:#bdbdbd;cursor:pointer;" onclick="delHist(${h.id})" title="Eliminar"></i>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('grandTotalHistory').innerText = `${c}${g.toFixed(2)}`;
         }
 
         window.delHist = function(id) {
-            if (!confirm("Eliminar venta devuelve el stock. ¿Seguro?")) return;
-            dbRef.ref('history').orderByChild('id').equalTo(id).once('value', s => {
-                s.forEach(c => {
-                    const val = c.val(); val.items.forEach(i => { const p = db.find(x => x.id === i.pId); if(p) p.stock += i.deduct; });
-                    dbRef.ref('inventory').set(db); c.ref.remove(); Toast.show("Venta Anulada");
-                });
-            });
-        }
-        window.clearHistory=()=>{ if(confirm("¿Borrar todo?")) dbRef.ref('history').set(null); }
-
-        function renderProfit() {
-            const t = document.getElementById('profitBody'); t.innerHTML = ""; let gT = 0;
-            history.forEach(h => {
-                let sP = 0; h.items.forEach(i => { sP += ((profitMap[i.c.trim()] || 0) / 12) * i.deduct; });
-                gT += sP;
-                t.innerHTML += `<tr><td>${h.date.split(',')[0]}</td><td><b>${h.client}</b></td><td>${h.items.length} refs</td><td style="text-align:right">${config.currency}${h.total.toFixed(2)}</td><td style="text-align:right;font-weight:bold;color:#2E7D32">+ ${config.currency}${sP.toFixed(2)}</td></tr>`;
-            });
-            document.getElementById('totalProfitDisplay').innerText = `${config.currency}${gT.toFixed(2)}`;
-        }
-        
-        function printSale(c, t, i) { 
-             /* Simulación impresión para ahorrar espacio */ 
-             setTimeout(()=>window.print(), 500); 
-        }
-
-        // HELPERS
-        window.compressAndPreview = function(file, imgId, inpId) {
-            const reader = new FileReader(); reader.readAsDataURL(file);
-            reader.onload = e => { 
-                const img=new Image(); img.src=e.target.result; 
-                img.onload=()=>{
-                    const c=document.createElement('canvas'), ctx=c.getContext('2d');
-                    let w=img.width, h=img.height; if(w>500){ h*=500/w; w=500; } c.width=w; c.height=h;
-                    ctx.drawImage(img,0,0,w,h); document.getElementById(imgId).src=c.toDataURL('image/jpeg',0.7); document.getElementById(inpId).value=c.toDataURL('image/jpeg',0.7);
+            if (!confirm("⚠️ ¿BORRAR Y DEVOLVER STOCK?")) return;
+            dbRef.ref('history').once('value').then(snapshot => {
+                const historyData = snapshot.val(); if (!historyData) return;
+                let saleKey = null, saleData = null;
+                for (const [key, value] of Object.entries(historyData)) { if (value.id === id) { saleKey = key; saleData = value; break; } }
+                if (saleKey && saleData && saleData.items) {
+                    let updatedDb = [...db]; 
+                    saleData.items.forEach(soldItem => {
+                        const prodIndex = updatedDb.findIndex(p => p.id === soldItem.pId);
+                        if (prodIndex !== -1) updatedDb[prodIndex].stock = parseInt(updatedDb[prodIndex].stock) + parseInt(soldItem.deduct);
+                    });
+                    dbRef.ref('inventory').set(updatedDb);
+                    dbRef.ref('history/' + saleKey).remove().then(() => { Toast.show("Venta eliminada", "success"); });
                 }
-            }
+            });
         }
-        window.saveConfig = () => { config.name = document.getElementById('cfgName').value; config.maintenance = document.getElementById('cfgMaintenance').checked; dbRef.ref('config').set(config).then(()=>Toast.show("Configurado")); }
-        function applyConfig(){ document.getElementById('brandName').innerText = config.name; }
-        
-        window.nav=(v,e)=>{ document.querySelectorAll('.view-panel, .nav-item').forEach(x=>x.classList.remove('active')); document.getElementById('view-'+v).classList.add('active'); if(e) e.classList.add('active'); if(v==='profit') renderProfit(); if(v==='config') renderProfitConfigTable(); }
-        window.closeModal=(id)=>document.getElementById(id).style.display='none';
-        const Toast={show:(m,t='s')=>{const d=document.createElement('div');d.className=`toast ${t}`;d.innerHTML=m;document.getElementById('toast-container').appendChild(d);setTimeout(()=>d.remove(),3000)}}
+        window.clearHistory=()=>{ if(confirm("⚠️ ¿BORRAR TODO EL HISTORIAL DE VENTAS?")) dbRef.ref('history').set(null); }
+        window.reprint=(id)=>{const h=history.find(x=>x.id==id);if(h)printFromData(h,true);}
+
+        function printFromData(rec,cp=false){
+            document.getElementById('printBrand').innerText=config.name; document.getElementById('printSub').innerText=config.sub;
+            document.getElementById('printTel').innerText="Tel: " + config.tel; document.getElementById('printDate').innerText=rec.date;
+            document.getElementById('printFooter').innerText=config.footer;
+            document.getElementById('printClientBlock').innerHTML=`<strong style="font-size:1.1em">${rec.client}</strong><br>Tel: ${rec.phone||'N/A'}<br>ID Venta: #${rec.id.toString().slice(-6)}`;
+            const logoEl = document.getElementById('printLogoDisplay'); if(config.logo){ logoEl.src=config.logo; logoEl.style.display='block'; } else { logoEl.style.display='none'; }
+            const t=document.getElementById('printBody'); t.innerHTML="";
+            rec.items.forEach(i=>{ t.innerHTML+=`<tr><td style="padding:5px;border-bottom:1px solid #eee;">${i.qtyTxt}</td><td style="padding:5px;border-bottom:1px solid #eee;">${i.c} <small>(${i.m})</small></td><td style="padding:5px;border-bottom:1px solid #eee;text-align:right;">${config.currency}${i.total.toFixed(2)}</td></tr>` });
+            document.getElementById('printTotal').innerText=`${config.currency}${rec.total.toFixed(2)}`;
+            setTimeout(()=>window.print(),500);
+        }
+
+        window.previewColor=(c)=>{ document.documentElement.style.setProperty('--primary',c); }
+        window.closeModal=(id)=>{document.getElementById(id).style.display='none'}
+        const Toast={show:(m,t='s')=>{const d=document.createElement('div');d.className=`toast ${t}`;d.innerHTML=`<i class="fa-solid fa-check-circle"></i> ${m}`;document.getElementById('toast-container').appendChild(d);setTimeout(()=>d.remove(),3000)}}
         window.onclick=e=>{if(e.target.className==='modal')e.target.style.display='none'}
+
+        // --- CÁLCULO DE GANANCIAS CON DATOS DINÁMICOS ---
+        function renderProfit() {
+            const t = document.getElementById('profitBody'); t.innerHTML = "";
+            let grandTotalProfit = 0; const c = config.currency;
+            history.forEach(h => {
+                let saleProfit = 0;
+                h.items.forEach(item => {
+                    let code = item.c.trim();
+                    // AQUÍ ESTÁ EL CAMBIO: Usamos profitMap que viene de Firebase, no PROFIT_DB constante
+                    let profitPerDozen = profitMap[code] || 0; 
+                    let itemProfit = (profitPerDozen / 12) * item.deduct;
+                    saleProfit += itemProfit;
+                });
+                grandTotalProfit += saleProfit;
+                t.innerHTML += `<tr>
+                    <td><small>${h.date.split(',')[0]}</small></td>
+                    <td><b>${h.client}</b><br><small style="color:#888;">ID: #${h.id.toString().slice(-4)}</small></td>
+                    <td>${h.desc}</td>
+                    <td style="text-align:right">${c}${parseFloat(h.total).toFixed(2)}</td>
+                    <td style="text-align:right; font-weight:bold; color:#2E7D32;">+ ${c}${saleProfit.toFixed(2)}</td>
+                </tr>`;
+            });
+            document.getElementById('totalProfitDisplay').innerText = `${c}${grandTotalProfit.toFixed(2)}`;
+        }
+
     </script>
 </body>
+</html>
