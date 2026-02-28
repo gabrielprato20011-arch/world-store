@@ -656,7 +656,7 @@
 
             // Cargar Inventario
             dbRef.ref('inventory').on('value', s => { 
-                db = s.val() || []; 
+                db = s.val() ||[]; 
                 if(!s.val()) saveInitialData(); 
                 window.updateAllViews(); 
                 renderProfitConfigTable(); // Actualizar tabla de edición si cambia inventario
@@ -665,7 +665,7 @@
 
             // Cargar Historial
             dbRef.ref('history').on('value', s => { 
-                history = s.val() ? Object.values(s.val()).sort((a,b)=>b.id-a.id) : []; 
+                history = s.val() ? Object.values(s.val()).sort((a,b)=>b.id-a.id) :[]; 
                 renderHistory(); 
                 if(document.getElementById('view-profit') && document.getElementById('view-profit').classList.contains('active')) renderProfit(); 
             });
@@ -735,21 +735,42 @@
             dbRef.ref('inventory').set(newDb).then(()=>{ closeModal('modalProd'); Toast.show("Producto Guardado"); });
         }
 
+
+        // *************** CORE REPARADO - VENTA GARANTIZADA ***************
         window.processSale = function() {
             if(cart.length===0) return alert("El carrito está vacío");
             const nm=document.getElementById('cartClientName').value.trim(); if(!nm) return alert("Ingrese Nombre del Cliente");
+            
+            const btn = document.querySelector('button[onclick="window.processSale()"]');
+            if(btn) { btn.disabled = true; btn.innerText = "GUARDANDO NUBE..."; }
+
             let tot=0, desc="", snap=JSON.parse(JSON.stringify(cart));
             cart.forEach(i=>{
                 tot+=i.total; desc+=`${i.qtyTxt} ${i.c}, `;
-                const p=db.find(x=>x.id==i.pId); if(p) p.stock-=i.deduct;
             });
-            dbRef.ref('inventory').set(db); 
+            
             const rec={id:Date.now(), date:new Date().toLocaleString(), client:nm, phone:document.getElementById('cartClientPhone').value, total:tot, items:snap, desc:desc};
-            dbRef.ref('history').push(rec);
-            printFromData(rec);
-            cart=[]; document.getElementById('cartClientName').value=""; document.getElementById('cartClientPhone').value="";
-            renderCart(); toggleCart();
+            
+            // CallBack que detiene localmente todo reinicio de cajon hasta que Firebase reciba correctamente el websocket.
+            dbRef.ref('history').push(rec, function(error) {
+                if(btn) { btn.disabled = false; btn.innerText = "CONFIRMAR VENTA"; }
+                
+                if(error) {
+                    alert("⚠️ FALLA DE RED NATIVA O DE SINCRONIZACIÓN. Intente de nuevo. Los datos NO fueron descontados localmente ni registrados en la base.");
+                } else {
+                    cart.forEach(i=>{
+                        const p=db.find(x=>x.id==i.pId); if(p) p.stock-=i.deduct;
+                    });
+                    dbRef.ref('inventory').set(db); 
+                    
+                    printFromData(rec);
+                    
+                    cart=[]; document.getElementById('cartClientName').value=""; document.getElementById('cartClientPhone').value="";
+                    renderCart(); toggleCart();
+                }
+            });
         }
+        // *************** FIN PARCHE ***************
 
         window.saveConfig = function() {
             config.name = document.getElementById('cfgName').value; config.sub = document.getElementById('cfgSub').value;
@@ -831,8 +852,8 @@
 
         // --- CATALOG DATA RESTORE ---
         function saveInitialData(){
-           // [MISMOS DATOS QUE EN TU ORIGINAL, COPIADOS POR BREVEDAD PARA QUE FUNCIONE IGUAL]
-            const initialData = [
+           //[MISMOS DATOS QUE EN TU ORIGINAL, COPIADOS POR BREVEDAD PARA QUE FUNCIONE IGUAL]
+            const initialData =[
                 // DAMA
                 {c:"W 15",m:"Croc Clasico Baby",d:46,t:"36-40",cat:"Dama"},{c:"LC W72-3",m:"Croc Decorado",d:32,t:"35-40",cat:"Dama"},{c:"LC W99-1",m:"Sandalia Fashion",d:48,t:"36-40",cat:"Dama"},
                 {c:"LC W-801",m:"Plataforma Barbie",d:35,t:"36-40",cat:"Dama"},{c:"LC M14-2",m:"Chancla Gatito/Vaca",d:38,t:"36-40",cat:"Dama"},{c:"HY 047-1",m:"Croc Bicolor 1",d:42,t:"36-40",cat:"Dama"},
@@ -905,8 +926,7 @@
             document.getElementById('cfgBanner').value=config.banner||""; document.getElementById('cfgMaintenance').checked=config.maintenance||false;
             const b = document.getElementById('globalBanner'); 
             if(config.banner){ b.innerText=config.banner; b.style.display='block'; } else { b.style.display='none'; }
-            if(config.logo){
-                ['displayLogoSidebar', 'mobileLogoImg', 'printLogoDisplay', 'cfgLogoPreview'].forEach(id=>{
+            if(config.logo){['displayLogoSidebar', 'mobileLogoImg', 'printLogoDisplay', 'cfgLogoPreview'].forEach(id=>{
                     const el=document.getElementById(id); if(el){ el.src=config.logo; if(id!=='cfgLogoPreview') el.style.display='block'; }
                 });
                 document.getElementById('cfgLogoData').value=config.logo;
@@ -975,8 +995,7 @@
         }
 
         window.setSaleType=function(t){ 
-            saleMode=t; 
-            ['doc','half','unit'].forEach(x=>{
+            saleMode=t;['doc','half','unit'].forEach(x=>{
                 document.getElementById('btn-'+x).style.background = x==t ? config.color : '#eee';
                 document.getElementById('btn-'+x).style.color = x==t ? 'white' : '#333';
             }); updateCalc(); 
@@ -1058,8 +1077,7 @@
             document.getElementById('modalProd').style.display='flex'; 
         }
 
-        window.openModalProd=()=>{ 
-            ['pCode','pModel','pPrice','pStock','prodImgBase64','pSize'].forEach(k=>document.getElementById(k).value=""); 
+        window.openModalProd=()=>{['pCode','pModel','pPrice','pStock','prodImgBase64','pSize'].forEach(k=>document.getElementById(k).value=""); 
             document.getElementById('prodId').value=""; document.getElementById('imgPreview').style.display='none'; 
             document.getElementById('modalProd').style.display='flex'; 
         }
