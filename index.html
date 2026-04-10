@@ -8,16 +8,18 @@
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
    <style>
         :root {
-            --primary: #D32F2F;
-            --primary-light: #FFF0F0;
-            --dark: #111827;
-            --dark-light: #1F2937;
-            --bg: #F8F9FC;
-            --text-main: #1E293B;
-            --text-muted: #94A3B8;
+            --primary: #DC2626;
+            --primary-dark: #B91C1C;
+            --primary-light: #FFF1F2;
+            --dark: #0D1117;
+            --dark-light: #1C2435;
+            --bg: #F1F5F9;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
             --white: #ffffff;
             --border: #E2E8F0;
             --surface: #ffffff;
@@ -28,11 +30,12 @@
             --nav-height-mobile: 68px;
             --radius: 14px;
             --shadow-soft: 0 1px 3px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.06);
-            --shadow-hover: 0 8px 30px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.04);
-            --shadow-card: 0 1px 2px rgba(0,0,0,0.03), 0 4px 16px rgba(0,0,0,0.04);
+            --shadow-hover: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.04);
+            --shadow-card: 0 1px 2px rgba(0,0,0,0.03), 0 4px 16px rgba(0,0,0,0.05);
         }
 
-        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        *:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
 
         body {
             margin: 0;
@@ -49,57 +52,72 @@
         /* --- SIDEBAR --- */
         aside {
             width: var(--sidebar-width);
-            background: var(--dark);
+            background: linear-gradient(180deg, #0D1117 0%, #111827 100%);
             color: white;
             display: flex;
             flex-direction: column;
             height: 100%;
             z-index: 50;
             transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            border-right: 1px solid rgba(255,255,255,0.04);
         }
 
-        .brand { padding: 30px 20px 24px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .brand {
+            padding: 28px 20px 22px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            position: relative;
+        }
+        .brand::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 20%; right: 20%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+
         #displayLogoSidebar {
-            width: 68px; height: 68px;
+            width: 64px; height: 64px;
             object-fit: contain;
-            border-radius: 16px;
+            border-radius: 14px;
             margin: 0 auto 12px auto;
-            background: white;
-            border: 3px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.95);
+            border: 2px solid rgba(255,255,255,0.1);
             display: none;
-            padding: 4px;
+            padding: 5px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
 
-        .brand h1 { margin: 0; font-size: 1.15rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
-        .brand small { color: rgba(255,255,255,0.35); font-weight: 500; font-size: 0.7rem; letter-spacing: 1.5px; text-transform: uppercase; }
+        .brand h1 { margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
+        .brand small { color: rgba(255,255,255,0.3); font-weight: 500; font-size: 0.68rem; letter-spacing: 1.5px; text-transform: uppercase; }
 
-        .nav-menu { flex: 1; padding: 16px 10px; overflow-y: auto; }
+        .nav-menu { flex: 1; padding: 14px 10px; overflow-y: auto; }
 
         .nav-item {
-            padding: 13px 18px;
+            padding: 11px 16px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 14px;
-            color: #6B7280;
+            gap: 12px;
+            color: rgba(255,255,255,0.4);
             transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-            font-size: 0.88rem;
+            font-size: 0.875rem;
             border-radius: 10px;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
             font-weight: 500;
             position: relative;
         }
 
-        .nav-item i { font-size: 1.05rem; width: 24px; text-align: center; }
+        .nav-item i { font-size: 1rem; width: 22px; text-align: center; transition: color 0.2s; }
 
-        .nav-item:hover { background: rgba(255,255,255,0.06); color: #D1D5DB; }
+        .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
 
         .nav-item.active {
-            background: rgba(255,255,255,0.1);
+            background: rgba(220,38,38,0.15);
             color: white;
             font-weight: 700;
-            box-shadow: none;
         }
+        .nav-item.active i { color: var(--primary); }
         .nav-item.active::before {
             content: '';
             position: absolute;
@@ -107,18 +125,18 @@
             top: 50%;
             transform: translateY(-50%);
             width: 3px;
-            height: 60%;
+            height: 56%;
             background: var(--primary);
             border-radius: 0 3px 3px 0;
         }
 
-        .sys-info { padding: 16px; font-size: 0.68rem; text-align: center; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.05); letter-spacing: 0.5px; }
+        .sys-info { padding: 14px; font-size: 0.65rem; text-align: center; color: rgba(255,255,255,0.15); border-top: 1px solid rgba(255,255,255,0.04); letter-spacing: 0.5px; }
 
         /* --- MAIN AREA --- */
         main { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 100%; }
 
         #globalBanner {
-            display: none; background: #FFFBEB; color: #92400E; text-align: center;
+            display: none; background: linear-gradient(90deg, #FFFBEB, #FEF3C7); color: #92400E; text-align: center;
             padding: 10px 16px; font-weight: 600; font-size: 0.82rem; width: 100%;
             border-bottom: 1px solid #FDE68A;
         }
@@ -136,30 +154,30 @@
         /* SEARCH BAR */
         .search-wrap { position: relative; flex: 1; max-width: 420px; }
         .search-wrap input {
-            width: 100%; padding: 11px 18px 11px 42px;
+            width: 100%; padding: 10px 18px 10px 42px;
             border-radius: 10px; border: 1.5px solid var(--border);
-            background: var(--bg); font-size: 0.88rem; font-weight: 500;
+            background: var(--bg); font-size: 0.875rem; font-weight: 500;
             color: var(--text-main); transition: 0.2s;
             font-family: 'Outfit', sans-serif;
         }
-        .search-wrap input:focus { background: white; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211,47,47,0.08); }
+        .search-wrap input:focus { background: white; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(220,38,38,0.08); outline: none; }
         .search-wrap input::placeholder { color: var(--text-muted); }
-        .search-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem; }
+        .search-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.82rem; }
 
         /* FILTERS */
         .filter-group { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; align-items: center; }
         .chip {
-            padding: 7px 16px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+            padding: 6px 16px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
             background: transparent; border: 1.5px solid var(--border); color: var(--text-muted);
-            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); white-space: nowrap;
         }
         .chip:hover { border-color: #CBD5E1; color: var(--text-main); }
         .chip.active { background: var(--text-main); color: white; border-color: var(--text-main); }
 
         /* --- VISTAS --- */
         .view-panel { padding: 24px 28px; flex: 1; overflow-y: auto; display: none; padding-bottom: 100px; }
-        .view-panel.active { display: block; animation: viewIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        @keyframes viewIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .view-panel.active { display: block; animation: viewIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        @keyframes viewIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- GRID DE PRODUCTOS --- */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 16px; }
@@ -169,35 +187,35 @@
             display: flex; flex-direction: column; height: 100%; position: relative;
             transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s, border-color 0.25s;
         }
-        .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); border-color: transparent; }
+        .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: transparent; }
         .card:active { transform: translateY(-1px) scale(0.99); }
 
         .card-img-wrap {
-            height: 155px; background: var(--bg); display: flex;
+            height: 158px; background: var(--bg); display: flex;
             justify-content: center; align-items: center; position: relative; overflow: hidden;
         }
         .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .card:hover .card-img-wrap img { transform: scale(1.06); }
+        .card:hover .card-img-wrap img { transform: scale(1.07); }
 
         .badge-cat {
-            position: absolute; top: 8px; right: 8px; padding: 3px 9px;
-            border-radius: 6px; color: white; font-size: 0.62rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.5px;
+            position: absolute; top: 10px; right: 10px; padding: 4px 10px;
+            border-radius: 20px; color: white; font-size: 0.6rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.8px;
             backdrop-filter: blur(6px); z-index: 2;
         }
 
         .card-content { padding: 14px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
-        .card h4 { margin: 0; font-size: 0.9rem; color: var(--text-main); font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; }
-        .card p { margin: 0; font-size: 0.78rem; color: var(--text-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .card h4 { margin: 0; font-size: 0.88rem; color: var(--text-main); font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; }
+        .card p { margin: 0; font-size: 0.77rem; color: var(--text-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
-        .card-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+        .card-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 10px; border-top: 1px solid #F1F5F9; }
         .price { color: var(--primary); font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; }
         .stock {
             font-size: 0.62rem; background: #ECFDF5; color: #065F46;
-            padding: 3px 8px; border-radius: 6px; font-weight: 700; letter-spacing: 0.3px;
+            padding: 3px 9px; border-radius: 20px; font-weight: 700; letter-spacing: 0.3px;
         }
 
-        /* --- TABLES (Clean Style) --- */
+        /* --- TABLES --- */
         .table-wrap {
             background: var(--surface);
             border-radius: var(--radius);
@@ -207,50 +225,50 @@
             border: 1px solid var(--border);
             width: 100%;
         }
-        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 600px; }
-        thead { background: var(--bg); color: var(--text-muted); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; font-weight: 700; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 600px; }
+        thead { background: #FAFBFC; color: var(--text-muted); text-transform: uppercase; font-size: 0.68rem; letter-spacing: 1.2px; font-weight: 700; border-bottom: 1px solid var(--border); }
         th { padding: 13px 18px; text-align: left; }
         td { padding: 13px 18px; border-bottom: 1px solid var(--border); color: var(--text-main); font-weight: 500; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #F8FAFC; }
         tr { transition: background 0.15s; }
 
-        .thumb { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); }
+        .thumb { width: 42px; height: 42px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); }
 
         /* --- BOTONES Y FORMULARIOS --- */
         .btn {
             padding: 11px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600;
             width: 100%; transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
             display: inline-flex; justify-content: center; align-items: center; gap: 8px;
-            font-size: 0.88rem; letter-spacing: 0.2px; font-family: 'Outfit', sans-serif;
+            font-size: 0.875rem; letter-spacing: 0.2px; font-family: 'Outfit', sans-serif;
         }
         .btn:hover { transform: translateY(-1px); }
         .btn:active { transform: translateY(0) scale(0.98); }
 
         .btn-primary { background: var(--dark); color: white; }
-        .btn-primary:hover { box-shadow: 0 4px 14px rgba(17, 24, 39, 0.25); }
+        .btn-primary:hover { background: var(--dark-light); box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
         .btn-success { background: var(--accent-green); color: white; }
-        .btn-success:hover { box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3); }
+        .btn-success:hover { box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35); }
         .btn-danger { background: #DC2626; color: white; }
-        .btn-danger:hover { box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3); }
+        .btn-danger:hover { box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35); }
         .btn-blue { background: #2563EB; color: white; }
-        .btn-blue:hover { box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3); }
+        .btn-blue:hover { box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); }
 
         input, select {
             width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px;
-            font-size: 0.88rem; color: var(--text-main); background: var(--surface); transition: 0.2s;
+            font-size: 0.875rem; color: var(--text-main); background: var(--surface); transition: 0.2s;
             font-family: 'Outfit', sans-serif;
         }
-        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.08); }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(220,38,38,0.08); outline: none; }
 
         /* --- CART & MODALS --- */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.5); z-index: 900; display: none; backdrop-filter: blur(3px); opacity: 0; transition: opacity 0.3s; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,15,30,0.6); z-index: 900; display: none; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s; }
         .overlay.active { display: block; opacity: 1; }
 
         .cart-drawer {
             position: fixed; top: 0; right: -500px; width: 420px; height: 100%;
             background: var(--surface); z-index: 1100; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex; flex-direction: column; box-shadow: -8px 0 30px rgba(0,0,0,0.08);
+            display: flex; flex-direction: column; box-shadow: -12px 0 40px rgba(0,0,0,0.1);
             border-left: 1px solid var(--border);
         }
         .cart-drawer.open { transform: translateX(-500px); }
@@ -258,44 +276,50 @@
         .cart-items { flex: 1; overflow-y: auto; padding: 16px; }
         .c-item {
             display: flex; gap: 14px; padding: 14px; border: 1px solid var(--border);
-            border-radius: 10px; margin-bottom: 10px; align-items: center; background: var(--surface);
-            transition: border-color 0.15s;
+            border-radius: 12px; margin-bottom: 10px; align-items: center; background: var(--surface);
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .c-item:hover { border-color: #CBD5E1; }
+        .c-item:hover { border-color: #CBD5E1; box-shadow: var(--shadow-card); }
 
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,15,30,0.6); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
         .modal-box {
-            background: var(--surface); width: 480px; max-width: 100%; padding: 28px;
-            border-radius: 18px; position: relative; max-height: 90vh; overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04);
+            background: var(--surface); width: 490px; max-width: 100%; padding: 30px;
+            border-radius: 20px; position: relative; max-height: 92vh; overflow-y: auto;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.04);
             animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @keyframes modalIn { from { transform: scale(0.95) translateY(8px); opacity: 0; } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes modalIn { from { transform: scale(0.94) translateY(10px); opacity: 0; } to { opacity: 1; transform: scale(1) translateY(0); } }
 
         /* UPLOADERS & CONFIG */
         .file-upload { border: 2px dashed var(--border); padding: 28px; text-align: center; border-radius: var(--radius); cursor: pointer; margin-top: 15px; background: var(--bg); transition: 0.2s; position: relative; }
         .file-upload:hover { border-color: var(--primary); background: var(--primary-light); }
 
         .config-card { background: var(--surface); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-card); margin-bottom: 16px; border: 1px solid var(--border); }
-        .section-title { font-weight: 700; color: var(--dark); border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 18px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 8px; }
-        .profit-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--border); gap: 10px; font-size: 0.88rem; }
+        .section-title { font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 18px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .profit-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--border); gap: 10px; font-size: 0.875rem; }
         .profit-row input { padding: 8px; width: 100px; text-align: center; border: 1.5px solid var(--border); border-radius: 8px; }
 
-        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column; }
-        .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite; }
-
-        /* Toast refinado */
-        .toast { padding: 12px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; box-shadow: var(--shadow-hover); }
+        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--dark); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column; }
+        .spinner { width:40px; height:40px; border:3px solid rgba(255,255,255,0.1); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite; }
 
         /* MOBILE */
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            aside { position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height-mobile); flex-direction: row; justify-content: space-around; padding: 0 6px; background: var(--surface); border-top: 1px solid var(--border); z-index: 1000; box-shadow: 0 -2px 12px rgba(0,0,0,0.04); }
+            aside {
+                position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height-mobile);
+                flex-direction: row; justify-content: space-around; padding: 0 6px;
+                background: rgba(255,255,255,0.97);
+                backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                border-top: 1px solid var(--border); border-right: none;
+                z-index: 1000; box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+                background-image: none;
+            }
             .brand, .sys-info { display: none; }
             .nav-menu { display: flex; flex-direction: row; width: 100%; padding: 0; justify-content: space-between; align-items: center; }
-            .nav-item { flex-direction: column; justify-content: center; padding: 8px 4px; flex: 1; border-radius: 10px; margin: 0; background: transparent; gap: 4px; font-size: 0.65rem; color: var(--text-muted); }
+            .nav-item { flex-direction: column; justify-content: center; padding: 8px 4px; flex: 1; border-radius: 10px; margin: 0; background: transparent; gap: 4px; font-size: 0.62rem; color: var(--text-muted); }
             .nav-item i { font-size: 1.15rem; margin-bottom: 0; }
             .nav-item.active { background: var(--primary-light); color: var(--primary); box-shadow: none; }
+            .nav-item.active i { color: var(--primary); }
             .nav-item.active::before { display: none; }
 
             main { height: calc(100dvh - var(--nav-height-mobile)); }
@@ -308,49 +332,59 @@
             .cart-drawer { width: 100%; right: -100%; }
             .cart-drawer.open { transform: translateX(-100%); }
             .view-panel { padding: 16px 14px; padding-bottom: 90px; }
+
+            .config-card { padding: 16px; }
+            .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            table { font-size: 0.85rem; }
+            .profit-input { width: 60px !important; padding: 4px !important; }
+            #changelogDateFrom, #changelogDateTo { width: 100%; }
+            .profit-config-table { font-size: 0.8rem; }
+            #importPreviewPanel .table-wrap { max-height: 150px; }
+            .btn-success, .btn { padding: 10px 14px; font-size: 0.9rem; }
         }
 
         @keyframes spin { 100% { transform:rotate(360deg); } }
         #print-layer { display: none; }
 
-    @media print { 
-        body > *:not(#print-layer) { display: none !important; } 
-        #print-layer { display: block !important; position: absolute; top: 0; left: 0; width: 100%; z-index: 99999; background: white; min-height: 100vh;} 
-        @page { margin: 5mm; } 
+    @media print {
+        body > *:not(#print-layer) { display: none !important; }
+        #print-layer { display: block !important; position: absolute; top: 0; left: 0; width: 100%; z-index: 99999; background: white; min-height: 100vh;}
+        @page { margin: 5mm; }
     }
 
         /* --- Elementos sin estilo previo --- */
         .settings-header {
-            font-size: 1.1rem; font-weight: 700; color: var(--dark); margin-bottom: 20px;
-            display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em;
+            font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 24px;
+            display: flex; align-items: center; gap: 10px; letter-spacing: -0.02em;
         }
-        .settings-header i { color: var(--text-muted); }
+        .settings-header i { color: var(--text-muted); font-size: 1rem; }
 
-        .cart-total-bar { padding: 16px; border-top: 1px solid var(--border); background: var(--bg); }
+        .cart-total-bar { padding: 16px; border-top: 1px solid var(--border); background: #FAFBFC; }
         .client-inputs { display: grid; gap: 10px; margin-bottom: 14px; }
 
         #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
         .toast {
-            padding: 12px 20px; border-radius: 10px; font-size: 0.84rem; font-weight: 600;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px;
+            padding: 12px 20px; border-radius: 12px; font-size: 0.84rem; font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 8px;
             animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            background: var(--dark); color: white;
+            background: var(--dark); color: white; min-width: 200px;
         }
         .toast.error { background: #DC2626; }
-        @keyframes toastIn { from { opacity: 0; transform: translateY(-8px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .toast.success { background: var(--accent-green); }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(12px) scale(0.95); } to { opacity: 1; transform: translateX(0) scale(1); } }
 
         /* Scrollbar sutil */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 
         /* Labels de formularios */
-        label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.6px; }
         .form-row { margin-bottom: 16px; }
 
         /* Checkbox wrap */
-        .checkbox-wrap { display: flex; align-items: center; gap: 10px; font-size: 0.88rem; cursor: pointer; padding: 10px 0; }
+        .checkbox-wrap { display: flex; align-items: center; gap: 10px; font-size: 0.875rem; cursor: pointer; padding: 10px 0; }
         .checkbox-wrap input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
 
     </style>
@@ -358,23 +392,24 @@
 
 <body>
 <!-- LOGIN OVERLAY -->
-    <div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--dark); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white;">
-        <div style="background:white; padding:5px; border-radius:16px; margin-bottom:24px;">
-            <img id="loginLogo" src="https://placehold.co/100?text=WS" style="width:80px; height:80px; border-radius:12px; object-fit:contain; border:1px solid #eee;">
+    <div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:radial-gradient(ellipse at top, #1a1f2e 0%, #0D1117 60%); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white;">
+        <div style="background:white; padding:6px; border-radius:18px; margin-bottom:20px; box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+            <img id="loginLogo" src="https://placehold.co/100?text=WS" style="width:76px; height:76px; border-radius:13px; object-fit:contain; border:1px solid #eee;">
         </div>
-        <h2 style="margin:0 0 5px 0; text-transform:uppercase; letter-spacing:3px; text-align:center; font-size:1.1rem; font-weight:700;">Acceso Restringido</h2>
-        <p style="color:rgba(255,255,255,0.35); margin-bottom:30px; font-size:0.82rem; letter-spacing:0.5px;">Sistema Privado World Store</p>
+        <h2 style="margin:0 0 6px 0; text-transform:uppercase; letter-spacing:3px; text-align:center; font-size:1rem; font-weight:800;">Acceso Restringido</h2>
+        <p style="color:rgba(255,255,255,0.3); margin-bottom:28px; font-size:0.78rem; letter-spacing:1px;">Sistema Privado World Store</p>
 
-        <div style="background:white; padding:28px; border-radius:16px; width:320px; max-width:90%; color:var(--text-main); text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-            <input type="email" id="txtEmail" placeholder="Correo Administrativo" style="margin-bottom:12px; border:1.5px solid #E2E8F0; background:#F8F9FC; width:100%; padding:12px 14px; border-radius:10px; font-family:'Outfit',sans-serif; font-size:0.88rem;">
-            <input type="password" id="txtPass" placeholder="Contraseña" style="margin-bottom:18px; border:1.5px solid #E2E8F0; background:#F8F9FC; width:100%; padding:12px 14px; border-radius:10px; font-family:'Outfit',sans-serif; font-size:0.88rem;">
-            <button class="btn btn-primary" onclick="appLogin()" id="btnLogin" style="width:100%; font-size:1rem;">INGRESAR</button>
-            <p id="loginError" style="color:#d32f2f; font-size:0.8rem; margin-top:15px; display:none; font-weight:bold;"></p>
+        <div style="background:white; padding:30px 28px; border-radius:18px; width:330px; max-width:92%; color:var(--text-main); text-align:center; box-shadow:0 24px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04); position:relative; overflow:hidden;">
+            <div style="position:absolute; top:0; left:10%; right:10%; height:2px; background:linear-gradient(90deg, transparent, var(--primary), transparent);"></div>
+            <input type="email" id="txtEmail" placeholder="Correo Administrativo" style="margin-bottom:12px; border:1.5px solid #E2E8F0; background:#F8F9FC; width:100%; padding:12px 14px; border-radius:10px; font-family:'Outfit',sans-serif; font-size:0.875rem; color:#0F172A;">
+            <input type="password" id="txtPass" placeholder="Contraseña" style="margin-bottom:18px; border:1.5px solid #E2E8F0; background:#F8F9FC; width:100%; padding:12px 14px; border-radius:10px; font-family:'Outfit',sans-serif; font-size:0.875rem; color:#0F172A;">
+            <button class="btn btn-primary" onclick="appLogin()" id="btnLogin" style="width:100%; font-size:0.95rem; letter-spacing:1px;">INGRESAR</button>
+            <p id="loginError" style="color:#DC2626; font-size:0.8rem; margin-top:14px; display:none; font-weight:600;"></p>
         </div>
     </div>
     <div id="loader">
         <div class="spinner"></div>
-        <p style="margin-top:15px; color:#555; font-weight:bold;">Sincronizando Sistema...</p>
+        <p style="margin-top:16px; color:rgba(255,255,255,0.4); font-weight:500; font-size:0.82rem; letter-spacing:1px;">Sincronizando Sistema...</p>
     </div>
     <div id="toast-container"></div>
     <div class="overlay" id="mainOverlay" onclick="toggleCart()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:900;display:none;backdrop-filter:blur(3px);"></div>
@@ -528,7 +563,7 @@
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
                 <h3>Inventario de Productos</h3>
-                <button class="btn btn-success" style="width:auto;" onclick="openModalProd()">+ Nuevo Producto</button>
+                <button class="btn btn-success" style="width:auto;" onclick="openModalProd()" title="Agregar nuevo producto al inventario">+ Nuevo Producto</button>
             </div>
             <div class="table-wrap">
                 <table>
@@ -561,6 +596,91 @@
                     </table>
                 </div>
                 <button class="btn btn-success" onclick="saveProfitTable()"><i class="fa-solid fa-save"></i> GUARDAR TABLA DE GANANCIAS</button>
+            </div>
+
+            <!-- IMPORTACIÓN / EXPORTACIÓN MASIVA -->
+            <div class="config-card">
+                <div class="section-title"><i class="fa-solid fa-file-excel"></i> Importación y Exportación Masiva</div>
+                <p style="font-size:0.85rem; color:#666; margin-bottom:15px;">Importe o exporte datos de inventario y ganancias desde/ hacia Excel. El sistema detectará automáticamente los cambios.</p>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+                    <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:16px;">
+                        <h4 style="margin:0 0 8px; color:#166534; font-size:0.95rem;"><i class="fa-solid fa-upload"></i> Importar desde Excel</h4>
+                        <p style="margin:0 0 10px; font-size:0.8rem; color:#666;">Cargue un archivo .xlsx o .csv con columnas: codigo, precio_docena, ganancia_docena, stock</p>
+                        <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleImportFile(this)">
+                        <button class="btn btn-success" style="width:auto; padding:8px 16px;" onclick="document.getElementById('importFile').click()" title="Seleccionar archivo Excel o CSV para importar">
+                            <i class="fa-solid fa-file-import"></i> Seleccionar Archivo
+                        </button>
+                        <button class="btn" style="width:auto; padding:8px 16px; background:#e0f2fe; color:#0369a1; margin-left:8px;" onclick="downloadTemplate()" title="Descargar plantilla de ejemplo">
+                            <i class="fa-solid fa-download"></i> Descargar Plantilla
+                        </button>
+                    </div>
+                    <div style="background:#eff6ff; border:1px solid #93c5fd; border-radius:10px; padding:16px;">
+                        <h4 style="margin:0 0 8px; color:#1e40af; font-size:0.95rem;"><i class="fa-solid fa-download"></i> Exportar Datos</h4>
+                        <p style="margin:0 0 10px; font-size:0.8rem; color:#666;">Descargue el inventario actual o el historial de cambios</p>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="btn" style="width:auto; padding:8px 12px; background:#22c55e; color:white;" onclick="exportInventory()" title="Exportar inventario completo a Excel">
+                                <i class="fa-solid fa-box"></i> Inventario
+                            </button>
+                            <button class="btn" style="width:auto; padding:8px 12px; background:#f59e0b; color:white;" onclick="exportProfits()" title="Exportar tabla de ganancias a Excel">
+                                <i class="fa-solid fa-chart-line"></i> Ganancias
+                            </button>
+                            <button class="btn" style="width:auto; padding:8px 12px; background:#6366f1; color:white;" onclick="exportChangelog()" title="Exportar historial de cambios a Excel">
+                                <i class="fa-solid fa-clock-rotate-left"></i> Historial
+                            </button>
+                            <button class="btn" style="width:auto; padding:8px 12px; background:#64748b; color:white; margin-top:8px;" onclick="exportInventoryCSV()" title="Exportar inventario a formato CSV">
+                                <i class="fa-solid fa-file-csv"></i> Inventario CSV
+                            </button>
+                            <button class="btn" style="width:auto; padding:8px 12px; background:#64748b; color:white; margin-top:4px;" onclick="exportProfitsCSV()" title="Exportar ganancias a formato CSV">
+                                <i class="fa-solid fa-file-csv"></i> Ganancias CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview de Importación -->
+                <div id="importPreviewPanel" style="display:none;">
+                    <div style="background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:16px; margin-bottom:15px;">
+                        <h4 style="margin:0 0 10px; color:#92400e;"><i class="fa-solid fa-eye"></i> Vista Previa de Importación</h4>
+                        <div id="importStats" style="font-size:0.9rem; margin-bottom:10px;"></div>
+                        <div style="max-height:200px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:6px;">
+                            <table style="width:100%; font-size:0.8rem;">
+                                <thead style="background:#f9fafb; position:sticky; top:0;">
+                                    <tr><th style="padding:8px;">Código</th><th style="padding:8px;">Precio</th><th style="padding:8px;">Ganancia</th><th style="padding:8px;">Stock</th><th style="padding:8px;">Acción</th></tr>
+                                </thead>
+                                <tbody id="importPreviewBody"></tbody>
+                            </table>
+                        </div>
+                        <div style="display:flex; gap:10px; margin-top:12px;">
+                            <button class="btn btn-success" onclick="confirmImport()">
+                                <i class="fa-solid fa-check"></i> Confirmar Importación
+                            </button>
+                            <button class="btn" style="background:#ef4444; color:white;" onclick="cancelImport()">
+                                <i class="fa-solid fa-xmark"></i> Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORIAL DE CAMBIOS -->
+            <div class="config-card">
+                <div class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Historial de Cambios</div>
+                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+                    <input type="text" id="changelogSearch" placeholder="Buscar por código..." onkeyup="renderChangelog()" style="padding:10px; border-radius:8px; border:1.5px solid var(--border); flex:1; min-width:150px;">
+                    <select id="changelogFilter" onchange="renderChangelog()" style="padding:10px; border-radius:8px; border:1.5px solid var(--border);">
+                        <option value="">Todos los tipos</option>
+                        <option value="precio">Precio</option>
+                        <option value="ganancia">Ganancia</option>
+                        <option value="stock">Stock</option>
+                        <option value="importacion">Importación</option>
+                    </select>
+                    <input type="date" id="changelogDateFrom" onchange="renderChangelog()" title="Desde" style="padding:10px; border-radius:8px; border:1.5px solid var(--border);">
+                    <input type="date" id="changelogDateTo" onchange="renderChangelog()" title="Hasta" style="padding:10px; border-radius:8px; border:1.5px solid var(--border);">
+                </div>
+                <div id="changelogEmpty" style="text-align:center; color:#999; padding:20px; display:none;">No hay cambios registrados</div>
+                <div id="changelogList" style="max-height:300px; overflow-y:auto;"></div>
+                <div id="changelogPagination" style="display:flex; justify-content:center; gap:8px; margin-top:10px;"></div>
             </div>
 
             <div class="config-card">
@@ -649,9 +769,9 @@
 
     <!-- DRAWER & MODALS -->
     <div id="cartDrawer" class="cart-drawer">
-        <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin:0">🛒 Tu Pedido</h3>
-            <button onclick="toggleCart()" style="background:none; border:none; font-size:1.5rem; padding:10px;">&times;</button>
+        <div style="padding:16px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:1rem; font-weight:700; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-bag-shopping" style="color:var(--primary);"></i> Tu Pedido</h3>
+            <button onclick="toggleCart()" style="background:none; border:none; font-size:1.4rem; padding:8px; cursor:pointer; color:var(--text-muted); line-height:1;">&times;</button>
         </div>
         <div class="cart-items" id="cartContainer"></div>
         <div class="cart-total-bar">
@@ -753,7 +873,13 @@
             measurementId: "G-9NQMR0XVHT"
         };
 
-        try { firebase.initializeApp(firebaseConfig); } catch(e) { console.error(e); }
+        try { 
+            firebase.initializeApp(firebaseConfig); 
+            console.log('Firebase inicializado correctamente');
+        } catch(e) { 
+            console.error('Error al inicializar Firebase:', e); 
+            alert('Error de conexión: ' + e.message);
+        }
         
         const dbRef = firebase.database();
         const auth = firebase.auth(); 
@@ -770,12 +896,15 @@
         let profitMap = {};
 
         // 4. AUTENTICACIÓN
+        console.log('Inicializando auth...');
         auth.onAuthStateChanged(user => {
+            console.log('Auth state changed, user:', user);
             if (user) {
                 document.getElementById('loginOverlay').style.display = 'none';
                 startSystem(); 
                 const d=document.createElement('div');d.className='toast success';d.innerHTML='<i class="fa-solid fa-check"></i> Bienvenido';document.getElementById('toast-container').appendChild(d);setTimeout(()=>d.remove(),3000);
             } else {
+                console.log('No hay usuario, mostrando login');
                 document.getElementById('loginOverlay').style.display = 'flex';
                 const savedLogo = localStorage.getItem('localLogo');
                 if(savedLogo) {
@@ -792,13 +921,21 @@
             const err = document.getElementById('loginError');
             if(!e || !p) { err.innerText = "Ingrese correo y contraseña."; err.style.display = 'block'; return; }
             btn.innerText = "Verificando..."; btn.disabled = true; err.style.display = 'none';
-            auth.signInWithEmailAndPassword(e, p).catch(error => {
-                    btn.innerText = "INGRESAR AL SISTEMA"; btn.disabled = false;
+            console.log('Intentando login con:', e);
+            auth.signInWithEmailAndPassword(e, p)
+                .then(() => {
+                    console.log('Login exitoso');
+                })
+                .catch(error => {
+                    console.error('Error de login:', error);
+                    btn.innerText = "INGRESAR"; btn.disabled = false;
                     let msg = "Error de acceso.";
                     if(error.code === 'auth/wrong-password') msg = "Contraseña incorrecta.";
                     if(error.code === 'auth/user-not-found') msg = "Usuario no registrado.";
+                    if(error.code === 'auth/invalid-email') msg = "Correo inválido.";
+                    if(error.code === 'auth/network-request-failed') msg = "Sin conexión a internet.";
                     err.innerText = msg; err.style.display = 'block';
-            });
+                });
         }
 
         // 5. INICIO DE SISTEMA Y CARGA DE DATOS
@@ -845,6 +982,9 @@
 
             // CARGAR CUENTAS POR COBRAR
             loadAccountsData();
+            
+            // CARGAR HISTORIAL DE CAMBIOS
+            loadChangelog();
         }
 
         // --- OPTIMIZACIÓN DE BÚSQUEDA ---
@@ -891,11 +1031,18 @@
                 stock:parseInt(document.getElementById('pStock').value)||0, t:document.getElementById('pSize').value,
                 img:document.getElementById('prodImgBase64').value
             };
+            if(obj.stock < 0) { Toast.show("El stock no puede ser negativo", "error"); return; }
+            if(obj.d < 0) { Toast.show("El precio no puede ser negativo", "error"); return; }
             const saveBtn = document.querySelector('button[onclick="window.saveProduct()"]');
             if(saveBtn) { saveBtn.disabled = true; saveBtn.innerText = "GUARDANDO..."; }
             dbRef.ref('inventory').once('value').then(snap => {
                 let freshDb = snap.val() || [];
-                if(id) { const i=freshDb.findIndex(x=>x.id==id); if(i!==-1) freshDb[i]={...freshDb[i],...obj}; }
+                if(id) { const i=freshDb.findIndex(x=>x.id==id); if(i!==-1) {
+                    const oldProd = freshDb[i];
+                    if(oldProd.d !== obj.d) addChangelogEntry('precio', obj.c, 'precio_docena', oldProd.d, obj.d);
+                    if(oldProd.stock !== obj.stock) addChangelogEntry('stock', obj.c, 'stock', oldProd.stock, obj.stock);
+                    freshDb[i]={...oldProd,...obj}; 
+                }}
                 else { freshDb.unshift({...obj, id:Date.now()}); }
                 return dbRef.ref('inventory').set(freshDb);
             }).then(()=>{ closeModal('modalProd'); Toast.show("Producto Guardado"); })
@@ -987,41 +1134,515 @@
                         ${details}
                     </td>
                     <td style="padding:10px; text-align:right; border-bottom:1px solid #f0f0f0;">
-                        <input type="number" class="profit-input" data-code="${code}" value="${currentVal}" step="0.1" style="width:80px; text-align:center; padding:5px; border-radius:5px; border:1px solid #ddd;">
+                        <input type="number" class="profit-input" data-code="${code}" value="${currentVal}" step="0.1" style="width:80px; text-align:center; padding:5px; border-radius:5px; border:1px solid #ddd;" onchange="autoSaveProfit(this, '${code}')" title="Cambia y se guarda automáticamente">
                     </td>
                 `;
                 container.appendChild(row);
             });
         }
 
+        // Auto-guardado de ganancia unitaria
+        window.autoSaveProfit = function(input, code) {
+            const val = parseFloat(input.value);
+            if(isNaN(val)) return;
+            dbRef.ref('profits').once('value').then(snap => {
+                const freshProfit = snap.val() || {};
+                const oldVal = freshProfit[code] || 0;
+                if(val === oldVal) return;
+                freshProfit[code] = val;
+                return dbRef.ref('profits').set(freshProfit).then(() => {
+                    addChangelogEntry('ganancia', code, 'ganancia_docena', oldVal, val);
+                    Toast.show('Ganancia actualizada', 'success');
+                });
+            }).catch(err => Toast.show('Error al guardar: ' + err.message, 'error'));
+        }
+
         // Guarda los cambios hechos en la tabla a Firebase
         window.saveProfitTable = function() {
             const inputs = document.querySelectorAll('.profit-input');
-            let newMap = {};
-            
-            // Recorre todos los inputs visibles (OJO: lo ideal es editar y guardar, si hay filtro el input no existe,
-            // así que debemos combinar con el mapa original para no perder datos ocultos por filtro)
-            
-            // Primero copiamos todo lo existente
-            newMap = { ...profitMap };
+            dbRef.ref('profits').once('value').then(snap => {
+                const freshProfit = snap.val() || {};
+                const newMap = { ...freshProfit };
 
-            // Luego actualizamos con lo que esté en pantalla
-            inputs.forEach(input => {
-                const code = input.getAttribute('data-code');
-                const val = parseFloat(input.value);
-                if (!isNaN(val)) {
-                    newMap[code] = val;
-                }
+                inputs.forEach(input => {
+                    const code = input.getAttribute('data-code');
+                    const val = parseFloat(input.value);
+                    if (!isNaN(val)) {
+                        newMap[code] = val;
+                    }
+                });
+
+                return dbRef.ref('profits').set(newMap).then(() => {
+                    inputs.forEach(input => {
+                        const code = input.getAttribute('data-code');
+                        const val = parseFloat(input.value);
+                        const oldVal = freshProfit[code] || 0;
+                        if (!isNaN(val) && val !== oldVal) {
+                            addChangelogEntry('ganancia', code, 'ganancia_docena', oldVal, val);
+                        }
+                    });
+                    Toast.show("Tabla de Ganancias Actualizada", "success");
+                    renderProfit();
+                });
+            }).catch(err => alert("Error al guardar: " + err.message));
+        }
+
+        // --- SISTEMA DE IMPORTACIÓN/EXPORTACIÓN MASIVA Y CHANGELOG ---
+        let changelog = [];
+        let importData = [];
+
+        function loadChangelog() {
+            dbRef.ref('changelog').on('value', s => {
+                changelog = s.val() || [];
+                if(document.getElementById('view-config').classList.contains('active')) renderChangelog();
+            });
+        }
+
+        function saveChangelog() {
+            dbRef.ref('changelog').set(changelog);
+        }
+
+        function addChangelogEntry(tipo, codigo, campo, anterior, nuevo) {
+            const entry = {
+                id: Date.now(),
+                fecha: new Date().toISOString(),
+                tipo,
+                codigo: codigo.toUpperCase().trim(),
+                campo,
+                valor_anterior: anterior,
+                valor_nuevo: nuevo
+            };
+            changelog.unshift(entry);
+            if(changelog.length > 500) changelog = changelog.slice(0, 500);
+            saveChangelog();
+        }
+
+        window.renderChangelog = function(page = 1) {
+            const container = document.getElementById('changelogList');
+            const empty = document.getElementById('changelogEmpty');
+            const pagination = document.getElementById('changelogPagination');
+            if(!container) return;
+            
+            const search = document.getElementById('changelogSearch')?.value?.toLowerCase() || '';
+            const filter = document.getElementById('changelogFilter')?.value || '';
+            const dateFrom = document.getElementById('changelogDateFrom')?.value || '';
+            const dateTo = document.getElementById('changelogDateTo')?.value || '';
+            const itemsPerPage = 20;
+            
+            let filtered = changelog.filter(c => {
+                const entryDate = new Date(c.fecha).toISOString().split('T')[0];
+                const matchSearch = !search || c.codigo.toLowerCase().includes(search);
+                const matchFilter = !filter || c.tipo === filter;
+                const matchFrom = !dateFrom || entryDate >= dateFrom;
+                const matchTo = !dateTo || entryDate <= dateTo;
+                return matchSearch && matchFilter && matchFrom && matchTo;
             });
 
-            // Guardar en Firebase
-            dbRef.ref('profits').set(newMap)
-                .then(() => {
-                    profitMap = newMap;
-                    Toast.show("Tabla de Ganancias Actualizada", "success");
-                    renderProfit(); // Refrescar reporte si estuviera visible
-                })
-                .catch(err => alert("Error al guardar: " + err.message));
+            if(filtered.length === 0) {
+                container.innerHTML = '';
+                if(empty) empty.style.display = 'block';
+                if(pagination) pagination.innerHTML = '';
+                return;
+            }
+            if(empty) empty.style.display = 'none';
+
+            const totalPages = Math.ceil(filtered.length / itemsPerPage);
+            const start = (page - 1) * itemsPerPage;
+            const paged = filtered.slice(start, start + itemsPerPage);
+            
+            const c = config.currency || '$';
+            container.innerHTML = paged.map(entry => {
+                const fecha = new Date(entry.fecha);
+                const fechaStr = fecha.toLocaleDateString() + ' ' + fecha.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                const tipoLabel = entry.tipo === 'precio' ? 'Precio' : 
+                                  entry.tipo === 'ganancia' ? 'Ganancia' : 
+                                  entry.tipo === 'stock' ? 'Stock' : 'Importación';
+                const tipoColor = entry.tipo === 'importacion' ? '#6366f1' : 
+                                  entry.tipo === 'precio' ? '#dc2626' : 
+                                  entry.tipo === 'ganancia' ? '#059669' : '#d97706';
+                return `<div style="padding:12px; border-bottom:1px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <div>
+                        <span style="font-weight:700; font-size:0.9rem;">${entry.codigo}</span>
+                        <span style="background:${tipoColor}; color:white; padding:2px 8px; border-radius:4px; font-size:0.7rem; margin-left:8px;">${tipoLabel}</span>
+                        <div style="font-size:0.75rem; color:#666; margin-top:2px;">
+                            Campo: <b>${entry.campo}</b> · ${c}${entry.valor_anterior} → <b>${c}${entry.valor_nuevo}</b>
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:0.75rem; color:#999;">${fechaStr}</div>
+                        <button class="btn" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; width:auto; margin-top:4px;" onclick="revertChange(${entry.id})">
+                            <i class="fa-solid fa-rotate-left"></i> Revertir
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+            
+            // Paginación
+            if(pagination && totalPages > 1) {
+                let pagHTML = '';
+                if(page > 1) pagHTML += `<button class="chip" onclick="renderChangelog(${page-1})">← Anterior</button>`;
+                pagHTML += `<span style="padding:8px; font-size:0.85rem;">Página ${page} de ${totalPages}</span>`;
+                if(page < totalPages) pagHTML += `<button class="chip" onclick="renderChangelog(${page+1})">Siguiente →</button>`;
+                pagination.innerHTML = pagHTML;
+            }
+        }
+
+        window.revertChange = function(id) {
+            const entry = changelog.find(c => c.id === id);
+            if(!entry) return;
+            if(!confirm('¿Revertir este cambio? Se restaurará el valor anterior.')) return;
+
+            if(entry.tipo === 'precio' || entry.tipo === 'stock') {
+                dbRef.ref('inventory').once('value').then(snap => {
+                    const freshDb = snap.val() || [];
+                    const prod = freshDb.find(p => p.c.trim().toUpperCase() === entry.codigo);
+                    if(!prod) throw new Error('Producto no encontrado');
+                    const campo = entry.campo === 'precio_docena' ? 'd' : 'stock';
+                    const actual = campo === 'd' ? prod.d : prod.stock;
+                    const nuevo = campo === 'd' ? parseFloat(entry.valor_anterior) : parseInt(entry.valor_anterior);
+                    prod[campo] = nuevo;
+                    return dbRef.ref('inventory').set(freshDb).then(() => {
+                        Toast.show('Cambio revertido', 'success');
+                        addChangelogEntry(entry.tipo, entry.codigo, entry.campo, actual, nuevo);
+                    });
+                }).catch(err => Toast.show('Error al revertir: ' + err.message, 'error'));
+            } else if(entry.tipo === 'ganancia') {
+                dbRef.ref('profits').once('value').then(snap => {
+                    const freshProfit = snap.val() || {};
+                    freshProfit[entry.codigo] = parseFloat(entry.valor_anterior);
+                    return dbRef.ref('profits').set(freshProfit).then(() => {
+                        Toast.show('Cambio revertido', 'success');
+                        addChangelogEntry('ganancia', entry.codigo, 'ganancia_docena', entry.valor_nuevo, entry.valor_anterior);
+                    });
+                }).catch(err => Toast.show('Error al revertir: ' + err.message, 'error'));
+            }
+        }
+
+        window.handleImportFile = function(input) {
+            const file = input.files[0];
+            if(!file) return;
+            showLoader('Procesando archivo Excel...');
+            
+            const reader = new FileReader();
+            reader.onerror = function() {
+                hideLoader();
+                Toast.show('Error al leer el archivo', 'error');
+            };
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+                
+                if(json.length < 2) {
+                    hideLoader();
+                    alert('El archivo está vacío o no tiene datos');
+                    return;
+                }
+                
+                const headers = json[0].map(h => String(h).toLowerCase().trim());
+                const codigoIdx = headers.findIndex(h => h.includes('codigo') || h === 'c' || h === 'code');
+                const precioIdx = headers.findIndex(h => h.includes('precio') || h.includes('docena'));
+                const gananciaIdx = headers.findIndex(h => h.includes('ganancia') || h.includes('profit'));
+                const stockIdx = headers.findIndex(h => h.includes('stock') || h.includes('inventario'));
+                
+                if(codigoIdx === -1) {
+                    alert('No se encontró la columna "codigo" en el archivo');
+                    return;
+                }
+                
+                importData = [];
+                let errors = [];
+                for(let i = 1; i < json.length; i++) {
+                    const row = json[i];
+                    if(!row[codigoIdx]) continue;
+                    
+                    const codigo = String(row[codigoIdx]).trim().toUpperCase();
+                    const precio = precioIdx !== -1 ? parseFloat(row[precioIdx]) || 0 : 0;
+                    const ganancia = gananciaIdx !== -1 ? parseFloat(row[gananciaIdx]) || 0 : 0;
+                    let stock = 0;
+                    if(stockIdx !== -1 && row[stockIdx] !== undefined && row[stockIdx] !== null && String(row[stockIdx]).trim() !== '') {
+                        const parsed = parseInt(row[stockIdx]);
+                        stock = Number.isNaN(parsed) ? null : parsed;
+                    }
+
+                    const existsInDb = db.find(p => p.c.trim().toUpperCase() === codigo);
+                    const existsInProfit = profitMap[codigo] !== undefined;
+
+                    importData.push({
+                        codigo,
+                        precio_docena: precio,
+                        ganancia_docena: ganancia,
+                        stock,
+                        action: existsInDb ? 'actualizar' : (existsInProfit ? 'solo_ganancia' : 'crear'),
+                        error: stock === null ? 'Stock inválido (no es número)' : (!existsInDb && !existsInProfit ? 'Producto no existe' : null)
+                    });
+                }
+                
+                showImportPreview();
+                hideLoader();
+            };
+            reader.readAsArrayBuffer(file);
+            input.value = '';
+        }
+
+        function showImportPreview() {
+            const panel = document.getElementById('importPreviewPanel');
+            const stats = document.getElementById('importStats');
+            const body = document.getElementById('importPreviewBody');
+            
+            const actualizar = importData.filter(d => d.action === 'actualizar').length;
+            const crear = importData.filter(d => d.action === 'crear').length;
+            const errores = importData.filter(d => d.error).length;
+            
+            stats.innerHTML = `<b>${actualizar}</b> productos a actualizar, <b>${crear}</b> nuevos (sin código en inventario), <b>${errores}</b> errores`;
+            
+            body.innerHTML = importData.slice(0, 50).map(d => {
+                const color = d.action === 'actualizar' ? '#fef3c7' : d.action === 'crear' ? '#dcfce7' : '#fee2e2';
+                const label = d.action === 'actualizar' ? 'Actualizar' : d.action === 'crear' ? 'Nuevo' : 'Error';
+                return `<tr style="background:${color};">
+                    <td style="padding:8px;"><b>${d.codigo}</b></td>
+                    <td style="padding:8px;">${d.precio_docena || '-'}</td>
+                    <td style="padding:8px;">${d.ganancia_docena || '-'}</td>
+                    <td style="padding:8px;">${d.stock || '-'}</td>
+                    <td style="padding:8px; font-size:0.75rem;">${d.error || label}</td>
+                </tr>`;
+            }).join('');
+            
+            if(importData.length > 50) {
+                body.innerHTML += `<tr><td colspan="5" style="padding:8px; text-align:center; color:#666;">... y ${importData.length - 50} más</td></tr>`;
+            }
+            
+            panel.style.display = 'block';
+        }
+
+        window.confirmImport = function() {
+            let actualizados = 0, nuevos = 0, errores = 0;
+            
+            // Backup automático antes de importación
+            const backupData = { inventory: [...db], profits: {...profitMap}, fecha: new Date().toISOString() };
+            dbRef.ref('backup').push(backupData).then(() => {
+                // Mantener solo los últimos 5 backups
+                dbRef.ref('backup').once('value').then(snap => {
+                    const backups = snap.val();
+                    if(backups) {
+                        const keys = Object.keys(backups);
+                        if(keys.length > 5) {
+                            const toDelete = keys.slice(0, keys.length - 5);
+                            toDelete.forEach(k => dbRef.ref('backup/' + k).remove());
+                        }
+                    }
+                });
+            });
+            
+            // Leer datos frescos de Firebase antes de aplicar cambios
+            Promise.all([
+                dbRef.ref('inventory').once('value'),
+                dbRef.ref('profits').once('value')
+            ]).then(([invSnap, profSnap]) => {
+                const dbCopy = invSnap.val() || [];
+                const profitCopy = profSnap.val() || {};
+                const seenCodes = new Set();
+
+                importData.forEach(d => {
+                    if(d.error) { errores++; return; }
+
+                    // Validar valores negativos
+                    if(d.precio_docena < 0) { errores++; d.error = 'Precio negativo'; return; }
+                    if(d.stock < 0) { errores++; d.error = 'Stock negativo'; return; }
+                    if(d.ganancia_docena < 0) { errores++; d.error = 'Ganancia negativa'; return; }
+
+                    // Validar código duplicado en el mismo archivo
+                    const codeUpper = d.codigo.toUpperCase();
+                    if(seenCodes.has(codeUpper)) {
+                        errores++;
+                        d.error = 'Código duplicado en archivo';
+                        return;
+                    }
+                    seenCodes.add(codeUpper);
+
+                    // Re-clasificar acción con datos frescos (evita duplicados si otro usuario agregó el producto)
+                    const existsInFresh = dbCopy.find(p => p.c.trim().toUpperCase() === d.codigo);
+                    const action = existsInFresh ? 'actualizar' : d.action;
+
+                    if(action === 'actualizar') {
+                        if(existsInFresh) {
+                            if(d.precio_docena && d.precio_docena !== existsInFresh.d) {
+                                addChangelogEntry('precio', d.codigo, 'precio_docena', existsInFresh.d, d.precio_docena);
+                                existsInFresh.d = parseFloat(d.precio_docena);
+                            }
+                            if(d.stock !== undefined && d.stock !== null && d.stock !== existsInFresh.stock) {
+                                addChangelogEntry('stock', d.codigo, 'stock', existsInFresh.stock, d.stock);
+                                existsInFresh.stock = parseInt(d.stock);
+                            }
+                            actualizados++;
+                        }
+                    } else if(action === 'crear') {
+                        dbCopy.unshift({
+                            id: Date.now() + Math.random(),
+                            c: d.codigo,
+                            m: d.precio_docena ? 'Nuevo producto' : 'Sin modelo',
+                            d: parseFloat(d.precio_docena) || 0,
+                            stock: parseInt(d.stock) || 0,
+                            t: 'Unica',
+                            cat: 'Dama'
+                        });
+                        nuevos++;
+                    }
+
+                    if(d.ganancia_docena) {
+                        const oldVal = profitCopy[d.codigo] || 0;
+                        if(oldVal !== d.ganancia_docena) {
+                            addChangelogEntry('ganancia', d.codigo, 'ganancia_docena', oldVal, d.ganancia_docena);
+                            profitCopy[d.codigo] = parseFloat(d.ganancia_docena);
+                        }
+                    }
+                });
+
+                return Promise.all([
+                    dbRef.ref('inventory').set(dbCopy),
+                    dbRef.ref('profits').set(profitCopy)
+                ]);
+            }).then(() => {
+                addChangelogEntry('importacion', 'SISTEMA', 'importacion', actualizados + nuevos, actualizados + ' act, ' + nuevos + ' new');
+                Toast.show(`Importación completada: ${actualizados} actualizados, ${nuevos} nuevos, ${errores} errores`, 'success');
+                cancelImport();
+                renderProfitConfigTable();
+                renderInv();
+            }).catch(err => {
+                Toast.show('Error en importación: ' + err.message, 'error');
+            });
+        }
+
+        window.cancelImport = function() {
+            importData = [];
+            document.getElementById('importPreviewPanel').style.display = 'none';
+        }
+
+        window.downloadTemplate = function() {
+            const template = [
+                ['codigo', 'precio_docena', 'ganancia_docena', 'stock'],
+                ['HY-001', 150.00, 5.50, 25],
+                ['LC W72-3', 120.00, 6.00, 10],
+                ['EJEMPLO', 100.00, 4.00, 0]
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(template);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
+            XLSX.writeFile(wb, 'plantilla_importacion.xlsx');
+        }
+
+        window.exportInventory = function() {
+            Promise.all([
+                dbRef.ref('inventory').once('value'),
+                dbRef.ref('profits').once('value')
+            ]).then(([invSnap, profSnap]) => {
+                const freshDb = invSnap.val() || [];
+                const freshProfit = profSnap.val() || {};
+                const data = freshDb.map(p => ({
+                    codigo: p.c,
+                    modelo: p.m,
+                    categoria: p.cat,
+                    precio_docena: p.d,
+                    stock: p.stock,
+                    tamaño: p.t || '',
+                    ganancia_docena: freshProfit[p.c] || 0
+                }));
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+                XLSX.writeFile(wb, 'inventario_export.xlsx');
+            });
+        }
+
+        window.exportProfits = function() {
+            dbRef.ref('profits').once('value').then(snap => {
+                const freshProfit = snap.val() || {};
+                const data = Object.keys(freshProfit).map(c => ({
+                    codigo: c,
+                    ganancia_docena: freshProfit[c]
+                }));
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Ganancias');
+                XLSX.writeFile(wb, 'ganancias_export.xlsx');
+            });
+        }
+
+        window.exportChangelog = function() {
+            const data = changelog.map(c => ({
+                fecha: c.fecha,
+                tipo: c.tipo,
+                codigo: c.codigo,
+                campo: c.campo,
+                valor_anterior: c.valor_anterior,
+                valor_nuevo: c.valor_nuevo
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Historial');
+            XLSX.writeFile(wb, 'historial_cambios.xlsx');
+        }
+
+        // Exportar a CSV
+        function downloadCSV(data, filename) {
+            if(data.length === 0) { Toast.show('No hay datos para exportar', 'error'); return; }
+            const headers = Object.keys(data[0]);
+            const csv = [headers.join(','), ...data.map(row => headers.map(h => JSON.stringify(row[h] ?? '')).join(','))].join('\n');
+            const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+
+        window.exportInventoryCSV = function() {
+            const data = db.map(p => ({
+                codigo: p.c,
+                modelo: p.m,
+                categoria: p.cat,
+                precio_docena: p.d,
+                stock: p.stock,
+                tamaño: p.t || '',
+                ganancia_docena: profitMap[p.c] || 0
+            }));
+            downloadCSV(data, 'inventario.csv');
+        }
+
+        window.exportProfitsCSV = function() {
+            const data = Object.keys(profitMap).map(c => ({
+                codigo: c,
+                ganancia_docena: profitMap[c]
+            }));
+            downloadCSV(data, 'ganancias.csv');
+        }
+
+        window.exportChangelogCSV = function() {
+            const data = changelog.map(c => ({
+                fecha: c.fecha,
+                tipo: c.tipo,
+                codigo: c.codigo,
+                campo: c.campo,
+                valor_anterior: c.valor_anterior,
+                valor_nuevo: c.valor_nuevo
+            }));
+            downloadCSV(data, 'historial.csv');
+        }
+
+        // Spinner de carga
+        function showLoader(msg = 'Cargando...') {
+            const existing = document.getElementById('customLoader');
+            if(existing) return;
+            const loader = document.createElement('div');
+            loader.id = 'customLoader';
+            loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;';
+            loader.innerHTML = `<div style="background:white;padding:30px;border-radius:12px;text-align:center;"><div style="border:4px solid #f3f3f3;border-top:4px solid var(--primary);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:0 auto 15px;"></div><div>${msg}</div></div><style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>`;
+            document.body.appendChild(loader);
+        }
+
+        function hideLoader() {
+            const loader = document.getElementById('customLoader');
+            if(loader) loader.remove();
         }
 
         // --- CATALOG DATA RESTORE ---
@@ -1441,7 +2062,7 @@
             if(v==='pos') renderPOS();
             if(v==='inv') renderInv();
             if(v==='profit') renderProfit();
-            if(v==='config') renderProfitConfigTable();
+            if(v==='config') { renderProfitConfigTable(); renderChangelog(); }
             if(v==='clients') renderClients();
             if(v==='accounts') { populateClientSelects(); renderDeudas(); renderNotas(); }
         }
