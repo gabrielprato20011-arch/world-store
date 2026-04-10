@@ -390,6 +390,7 @@
             <div class="nav-item active" onclick="nav('pos', this)"><i class="fa-solid fa-store"></i> <span>Catálogo</span></div>
             <div class="nav-item" onclick="nav('history', this)"><i class="fa-solid fa-receipt"></i> <span>Ventas</span></div>
             <div class="nav-item" onclick="nav('clients', this)"><i class="fa-solid fa-users"></i> <span>Clientes</span></div>
+            <div class="nav-item" onclick="nav('accounts', this)"><i class="fa-solid fa-hand-holding-dollar"></i> <span>Cuentas</span></div>
             <div class="nav-item" onclick="nav('profit', this)"><i class="fa-solid fa-chart-line"></i> <span>Ganancias</span></div>
             <div class="nav-item" onclick="nav('inv', this)"><i class="fa-solid fa-boxes-stacked"></i> <span>Inventario <b id="stockAlertBadge" style="display:none; background:#d32f2f; color:white; padding:1px 6px; border-radius:10px; font-size:0.7em;">0</b></span></div>
             <div class="nav-item" onclick="toggleCart()"><i class="fa-solid fa-cart-shopping"></i> <span>Carrito <b id="cartCountBadge" style="background:var(--primary); color:white; padding:1px 6px; border-radius:10px; font-size:0.7em;">0</b></span></div>
@@ -448,6 +449,74 @@
                     <thead><tr><th>Cliente</th><th>Teléfono</th><th>Compras</th><th>Total Gastado</th><th>Última Visita</th></tr></thead>
                     <tbody id="clientsBody"></tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- ACCOUNTS (CUENTAS POR COBRAR) -->
+        <div id="view-accounts" class="view-panel">
+            <div style="margin-bottom:20px;">
+                <h3 style="margin:0 0 8px;">Cuentas por Cobrar</h3>
+                <small style="color:#777;">Gestión de deudas y recordatorios de clientes</small>
+            </div>
+            
+            <!-- Tabs -->
+            <div style="display:flex; gap:8px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:12px;">
+                <button class="chip active" id="tab-deudas" onclick="switchAccountTab('deudas', this)" style="background:var(--text-main); color:white; border-color:var(--text-main);">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> Deudas
+                </button>
+                <button class="chip" id="tab-notas" onclick="switchAccountTab('notas', this)">
+                    <i class="fa-solid fa-note-sticky"></i> Notas
+                </button>
+            </div>
+
+            <!-- Pestaña DEUDAS -->
+            <div id="panel-deudas">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <select id="deudaClientSelect" onchange="renderDeudas()" style="padding:10px 14px; border-radius:10px; border:1.5px solid var(--border); font-family:'Outfit', sans-serif; font-size:0.9rem; min-width:200px;">
+                            <option value="">Todos los clientes</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-success" style="width:auto; padding:10px 18px;" onclick="openModalDeuda()">
+                        <i class="fa-solid fa-plus"></i> Nueva Deuda
+                    </button>
+                </div>
+                
+                <!-- Resumen cards -->
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:20px;">
+                    <div style="background:white; border-radius:12px; padding:16px; border:1px solid var(--border);">
+                        <small style="color:#777;">Total Pendiente</small>
+                        <div style="font-size:1.4rem; font-weight:800; color:var(--primary);" id="totalDeudaPendiente">$0.00</div>
+                    </div>
+                    <div style="background:white; border-radius:12px; padding:16px; border:1px solid var(--border);">
+                        <small style="color:#777;">Total Pagado</small>
+                        <div style="font-size:1.4rem; font-weight:800; color:var(--accent-green);" id="totalDeudaPagado">$0.00</div>
+                    </div>
+                    <div style="background:white; border-radius:12px; padding:16px; border:1px solid var(--border);">
+                        <small style="color:#777;">Clientes con Deuda</small>
+                        <div style="font-size:1.4rem; font-weight:800; color:var(--accent-amber);" id="clientesConDeuda">0</div>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Cliente</th><th>Concepto</th><th>Monto</th><th>Pagado</th><th>Saldo</th><th>Fecha</th><th></th></tr></thead>
+                        <tbody id="deudasBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pestaña NOTAS -->
+            <div id="panel-notas" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <select id="notaClientSelect" onchange="renderNotas()" style="padding:10px 14px; border-radius:10px; border:1.5px solid var(--border); font-family:'Outfit', sans-serif; font-size:0.9rem; min-width:200px;">
+                        <option value="">Todos los clientes</option>
+                    </select>
+                    <button class="btn btn-primary" style="width:auto; padding:10px 18px;" onclick="openModalNota()">
+                        <i class="fa-solid fa-plus"></i> Nueva Nota
+                    </button>
+                </div>
+                <div id="notasList" style="display:flex; flex-direction:column; gap:12px;"></div>
             </div>
         </div>
 
@@ -765,18 +834,17 @@
             dbRef.ref('profits').on('value', s => {
                 const val = s.val();
                 if (val) {
-                    // Si hay datos en la nube, los usamos
                     profitMap = val;
                 } else {
-                    // Si no hay datos (primera vez con el nuevo sistema), usamos los hardcodeados y subimos a la nube
                     profitMap = DEFAULT_PROFIT_DB;
                     dbRef.ref('profits').set(DEFAULT_PROFIT_DB);
                 }
-                // Si la pestaña ganancias está activa, recalcular
                 if(document.getElementById('view-profit').classList.contains('active')) renderProfit();
-                // Si la pestaña configuración está activa, actualizar tabla de edición
                 if(document.getElementById('view-config').classList.contains('active')) renderProfitConfigTable();
             });
+
+            // CARGAR CUENTAS POR COBRAR
+            loadAccountsData();
         }
 
         // --- OPTIMIZACIÓN DE BÚSQUEDA ---
@@ -1067,6 +1135,274 @@
             </tr>`).join('');
         }
 
+        // --- MÓDULO DE CUENTAS POR COBRAR ---
+        let cuentasData = { deudas: [], notas: [] };
+
+        function loadAccountsData() {
+            dbRef.ref('accounts').on('value', s => {
+                const val = s.val() || {};
+                cuentasData = {
+                    deudas: val.deudas || [],
+                    notas: val.notas || []
+                };
+                if(document.getElementById('view-accounts').classList.contains('active')) {
+                    populateClientSelects();
+                    renderDeudas();
+                    renderNotas();
+                }
+            });
+        }
+
+        function saveAccountsData() {
+            dbRef.ref('accounts').set(cuentasData);
+        }
+
+        function populateClientSelects() {
+            const clientMap = {};
+            history.forEach(sale => {
+                const key = (sale.client || '').trim();
+                if(key && !clientMap[key]) clientMap[key] = key;
+            });
+            const sortedClients = Object.values(clientMap).sort();
+            
+            const deudaSelect = document.getElementById('deudaClientSelect');
+            const notaSelect = document.getElementById('notaClientSelect');
+            const options = '<option value="">Todos los clientes</option>' + sortedClients.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            if(deudaSelect) deudaSelect.innerHTML = options;
+            if(notaSelect) notaSelect.innerHTML = options;
+        }
+
+        window.switchAccountTab = function(tab, btn) {
+            document.querySelectorAll('#view-accounts .chip').forEach(chip => {
+                chip.classList.remove('active');
+                chip.style.background = 'transparent';
+                chip.style.color = '';
+                chip.style.borderColor = '';
+            });
+            btn.classList.add('active');
+            btn.style.background = 'var(--text-main)';
+            btn.style.color = 'white';
+            btn.style.borderColor = 'var(--text-main)';
+            
+            document.getElementById('panel-deudas').style.display = tab === 'deudas' ? 'block' : 'none';
+            document.getElementById('panel-notas').style.display = tab === 'notas' ? 'block' : 'none';
+        }
+
+        window.renderDeudas = function() {
+            const body = document.getElementById('deudasBody');
+            if(!body) return;
+            
+            const filter = document.getElementById('deudaClientSelect')?.value || '';
+            let filtered = filter ? cuentasData.deudas.filter(d => d.cliente === filter) : cuentasData.deudas;
+            
+            const c = config.currency || '$';
+            let totalPendiente = 0, totalPagado = 0, clientesUnicos = new Set();
+            
+            filtered.forEach(d => {
+                totalPendiente += (d.monto - d.pagado);
+                totalPagado += d.pagado;
+                clientesUnicos.add(d.cliente);
+            });
+            
+            document.getElementById('totalDeudaPendiente').innerText = c + totalPendiente.toFixed(2);
+            document.getElementById('totalDeudaPagado').innerText = c + totalPagado.toFixed(2);
+            document.getElementById('clientesConDeuda').innerText = clientesUnicos.size;
+            
+            if(filtered.length === 0) {
+                body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#999; padding:30px;">Sin deudas registradas.</td></tr>';
+                return;
+            }
+            
+            body.innerHTML = filtered.map(d => {
+                const saldo = d.monto - d.pagado;
+                const estado = saldo <= 0 ? '<span style="background:#d1fae5; color:#065f46; padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:700;">PAGADO</span>' : 
+                               (d.monto * 0.5 > saldo ? '<span style="background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:700;">PARCIAL</span>' : 
+                               '<span style="background:#fee2e2; color:#991b1b; padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:700;">PENDIENTE</span>');
+                return `<tr>
+                    <td><b>${d.cliente}</b></td>
+                    <td>${d.concepto || '—'}</td>
+                    <td style="font-weight:600;">${c}${d.monto.toFixed(2)}</td>
+                    <td style="color:var(--accent-green);">${c}${d.pagado.toFixed(2)}</td>
+                    <td style="font-weight:700; color:var(--primary);">${c}${saldo.toFixed(2)}</td>
+                    <td><small>${new Date(d.fecha).toLocaleDateString()}</small></td>
+                    <td>
+                        <button class="btn" style="padding:4px 8px; font-size:0.75rem; background:#e0f2fe; color:#0369a1;" onclick="openPagoDeuda(${d.id})"><i class="fa-solid fa-dollar-sign"></i> Pagar</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        window.openModalDeuda = function() {
+            const html = `
+            <div id="modalDeuda" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px);" onclick="if(event.target===this)this.remove()">
+                <div style="background:white; border-radius:16px; padding:24px; width:90%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+                    <h3 style="margin:0 0 16px;"><i class="fa-solid fa-hand-holding-dollar"></i> Nueva Deuda</h3>
+                    <div style="display:grid; gap:12px;">
+                        <div><label style="font-size:0.85rem; color:#666; display:block; margin-bottom:4px;">Cliente</label>
+                            <select id="newDeudaCliente" style="width:100%; padding:12px; border-radius:10px; border:1.5px solid var(--border); font-family:'Outfit', sans-serif;">
+                                <option value="">Seleccionar cliente...</option>
+                                ${Object.values(history.reduce((acc, s) => { if(s.client) acc[s.client.trim().toLowerCase()] = s.client; return acc; }, {})).sort().map(c => `<option value="${c}">${c}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div><label style="font-size:0.85rem; color:#666; display:block; margin-bottom:4px;">Concepto</label>
+                            <input type="text" id="newDeudaConcepto" placeholder="ej: 3 docenas HY-001" style="width:100%; padding:12px; border-radius:10px; border:1.5px solid var(--border); font-family:'Outfit', sans-serif;"></div>
+                        <div><label style="font-size:0.85rem; color:#666; display:block; margin-bottom:4px;">Monto Total</label>
+                            <input type="number" id="newDeudaMonto" placeholder="0.00" step="0.01" style="width:100%; padding:12px; border-radius:10px; border:1.5px solid var(--border); font-family:'Outfit', sans-serif;"></div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button onclick="document.getElementById('modalDeuda').remove()" style="flex:1; padding:12px; border-radius:10px; border:none; background:#f1f5f9; color:#475569; cursor:pointer; font-weight:600;">Cancelar</button>
+                        <button onclick="saveNewDeuda()" style="flex:1; padding:12px; border-radius:10px; border:none; background:var(--primary); color:white; cursor:pointer; font-weight:600;">Guardar</button>
+                    </div>
+                </div>
+            </div>`;
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        window.saveNewDeuda = function() {
+            const cliente = document.getElementById('newDeudaCliente').value;
+            const concepto = document.getElementById('newDeudaConcepto').value;
+            const monto = parseFloat(document.getElementById('newDeudaMonto').value) || 0;
+            
+            if(!cliente || monto <= 0) { alert('Seleccione un cliente y monto válido'); return; }
+            
+            const nuevaDeuda = {
+                id: Date.now(),
+                cliente,
+                concepto,
+                monto,
+                pagado: 0,
+                fecha: Date.now(),
+                pagos: []
+            };
+            
+            cuentasData.deudas.push(nuevaDeuda);
+            saveAccountsData();
+            document.getElementById('modalDeuda').remove();
+            populateClientSelects();
+            renderDeudas();
+            Toast.show('Deuda registrada correctamente', 'success');
+        }
+
+        window.openPagoDeuda = function(id) {
+            const deuda = cuentasData.deudas.find(d => d.id === id);
+            if(!deuda) return;
+            const saldo = deuda.monto - deuda.pagado;
+            
+            const html = `
+            <div id="modalPago" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px);" onclick="if(event.target===this)this.remove()">
+                <div style="background:white; border-radius:16px; padding:24px; width:90%; max-width:380px; box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+                    <h3 style="margin:0 0 12px;"><i class="fa-solid fa-dollar-sign"></i> Registrar Pago</h3>
+                    <p style="color:#666; font-size:0.9rem; margin-bottom:16px;">Cliente: <b>${deuda.cliente}</b><br>Saldo pendiente: <b style="color:var(--primary);">${config.currency || '$'}${saldo.toFixed(2)}</b></p>
+                    <div style="display:grid; gap:12px;">
+                        <div><label style="font-size:0.85rem; color:#666; display:block; margin-bottom:4px;">Monto del pago</label>
+                            <input type="number" id="pagoMonto" placeholder="0.00" step="0.01" max="${saldo.toFixed(2)}" style="width:100%; padding:12px; border-radius:10px; border:1.5px solid var(--border); font-family:'Outfit', sans-serif;"></div>
+                        <div><label style="font-size:0.85rem; color:#666; display:block; margin-bottom:4px;">Nota (opcional)</label>
+                            <input type="text" id="pagoNota" placeholder="ej: Pago parcial" style="width:100%; padding:12px; border-radius:10px; border:1.5px solid var(--border); font-family:'Outfit', sans-serif;"></div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button onclick="document.getElementById('modalPago').remove()" style="flex:1; padding:12px; border-radius:10px; border:none; background:#f1f5f9; color:#475569; cursor:pointer; font-weight:600;">Cancelar</button>
+                        <button onclick="savePago(${id})" style="flex:1; padding:12px; border-radius:10px; border:none; background:var(--accent-green); color:white; cursor:pointer; font-weight:600;">Confirmar Pago</button>
+                    </div>
+                </div>
+            </div>`;
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        window.savePago = function(id) {
+            const monto = parseFloat(document.getElementById('pagoMonto').value) || 0;
+            const nota = document.getElementById('pagoNota').value;
+            if(monto <= 0) { alert('Ingrese monto válido'); return; }
+            
+            const deuda = cuentasData.deudas.find(d => d.id === id);
+            if(deuda) {
+                deuda.pagado += monto;
+                deuda.pagos.push({ monto, nota, fecha: Date.now() });
+                saveAccountsData();
+                document.getElementById('modalPago').remove();
+                renderDeudas();
+                Toast.show('Pago registrado', 'success');
+            }
+        }
+
+        window.renderNotas = function() {
+            const container = document.getElementById('notasList');
+            if(!container) return;
+            
+            const filter = document.getElementById('notaClientSelect')?.value || '';
+            let filtered = filter ? cuentasData.notas.filter(n => n.cliente === filter) : cuentasData.notas;
+            filtered = filtered.sort((a,b) => b.fecha - a.fecha);
+            
+            if(filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#999; padding:40px 20px;">Sin notas registradas.<br><small>Haz clic en "Nueva Nota" para crear una.</small></div>';
+                return;
+            }
+            
+            container.innerHTML = filtered.map(n => `
+                <div style="background:white; border-radius:12px; padding:16px; border:1px solid var(--border); position:relative;">
+                    <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:8px;">
+                        <div style="font-weight:700; color:var(--text-main);">${n.cliente}</div>
+                        <button onclick="deleteNota(${n.id})" style="background:none; border:none; color:#999; cursor:pointer; padding:4px;"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div style="color:#555; font-size:0.9rem; margin-bottom:8px; white-space:pre-wrap;">${n.texto}</div>
+                    <div style="font-size:0.75rem; color:#999;">${new Date(n.fecha).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+
+        window.openModalNota = function() {
+            const html = `
+            <div id="modalNota" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px);" onclick="if(event.target===this)this.remove()">
+                <div style="background:white; border-radius:16px; padding:24px; width:90%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+                    <h3 style="margin:0 0 16px;"><i class="fa-solid fa-note-sticky"></i> Nueva Nota</h3>
+                    <div style="display:grid; gap:12px;">
+                        <div><label style="font-size:0.85rem; color:#666; display:block; margin-bottom:4px;">Cliente (opcional)</label>
+                            <select id="newNotaCliente" style="width:100%; padding:12px; border-radius:10px; border:1.5px solid var(--border); font-family:'Outfit', sans-serif;">
+                                <option value="">Sin cliente específico</option>
+                                ${Object.values(history.reduce((acc, s) => { if(s.client) acc[s.client.trim().toLowerCase()] = s.client; return acc; }, {})).sort().map(c => `<option value="${c}">${c}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div><label style="font-size:0.85rem; color:#666; display:block; margin-bottom:4px;">Nota / Recordatorio</label>
+                            <textarea id="newNotaTexto" placeholder="Escribe tu nota o recordatorio..." style="width:100%; padding:12px; border-radius:10px; border:1.5px solid var(--border); font-family:'Outfit', sans-serif; min-height:100px; resize:vertical;"></textarea></div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button onclick="document.getElementById('modalNota').remove()" style="flex:1; padding:12px; border-radius:10px; border:none; background:#f1f5f9; color:#475569; cursor:pointer; font-weight:600;">Cancelar</button>
+                        <button onclick="saveNewNota()" style="flex:1; padding:12px; border-radius:10px; border:none; background:var(--primary); color:white; cursor:pointer; font-weight:600;">Guardar</button>
+                    </div>
+                </div>
+            </div>`;
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        window.saveNewNota = function() {
+            const cliente = document.getElementById('newNotaCliente').value;
+            const texto = document.getElementById('newNotaTexto').value;
+            
+            if(!texto.trim()) { alert('Escribe una nota'); return; }
+            
+            const nuevaNota = {
+                id: Date.now(),
+                cliente: cliente || '',
+                texto: texto.trim(),
+                fecha: Date.now()
+            };
+            
+            cuentasData.notas.push(nuevaNota);
+            saveAccountsData();
+            document.getElementById('modalNota').remove();
+            populateClientSelects();
+            renderNotas();
+            Toast.show('Nota guardada', 'success');
+        }
+
+        window.deleteNota = function(id) {
+            if(!confirm('¿Eliminar esta nota?')) return;
+            cuentasData.notas = cuentasData.notas.filter(n => n.id !== id);
+            saveAccountsData();
+            renderNotas();
+            Toast.show('Nota eliminada', 'success');
+        }
+
         // INTERFAZ Y RENDERIZADO
         function applyConfig(){
             document.documentElement.style.setProperty('--primary', config.color);
@@ -1107,6 +1443,7 @@
             if(v==='profit') renderProfit();
             if(v==='config') renderProfitConfigTable();
             if(v==='clients') renderClients();
+            if(v==='accounts') { populateClientSelects(); renderDeudas(); renderNotas(); }
         }
 
         function renderPOS(){
