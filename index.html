@@ -823,13 +823,16 @@
                 stock:parseInt(document.getElementById('pStock').value)||0, t:document.getElementById('pSize').value,
                 img:document.getElementById('prodImgBase64').value
             };
+            const saveBtn = document.querySelector('button[onclick="window.saveProduct()"]');
+            if(saveBtn) { saveBtn.disabled = true; saveBtn.innerText = "GUARDANDO..."; }
             dbRef.ref('inventory').once('value').then(snap => {
                 let freshDb = snap.val() || [];
                 if(id) { const i=freshDb.findIndex(x=>x.id==id); if(i!==-1) freshDb[i]={...freshDb[i],...obj}; }
                 else { freshDb.unshift({...obj, id:Date.now()}); }
                 return dbRef.ref('inventory').set(freshDb);
             }).then(()=>{ closeModal('modalProd'); Toast.show("Producto Guardado"); })
-              .catch(()=> Toast.show("Error al guardar producto.", "error"));
+              .catch(()=> Toast.show("Error al guardar producto.", "error"))
+              .finally(()=>{ if(saveBtn) { saveBtn.disabled = false; saveBtn.innerText = "GUARDAR CAMBIOS"; } });
         }
 
 
@@ -850,9 +853,8 @@
             
             // CallBack que detiene localmente todo reinicio de cajon hasta que Firebase reciba correctamente el websocket.
             dbRef.ref('history').push(rec, function(error) {
-                if(btn) { btn.disabled = false; btn.innerText = "CONFIRMAR VENTA"; }
-
                 if(error) {
+                    if(btn) { btn.disabled = false; btn.innerText = "CONFIRMAR VENTA"; }
                     alert("⚠️ FALLA DE RED NATIVA O DE SINCRONIZACIÓN. Intente de nuevo. Los datos NO fueron descontados localmente ni registrados en la base.");
                 } else {
                     dbRef.ref('inventory').once('value').then(invSnap => {
@@ -866,7 +868,11 @@
                         printFromData(rec);
                         cart=[]; document.getElementById('cartClientName').value=""; document.getElementById('cartClientPhone').value="";
                         renderCart(); toggleCart();
-                    }).catch(() => Toast.show("Venta guardada pero error al actualizar stock. Recarga el sistema.", "error"));
+                        if(btn) { btn.disabled = false; btn.innerText = "CONFIRMAR VENTA"; }
+                    }).catch(() => {
+                        if(btn) { btn.disabled = false; btn.innerText = "CONFIRMAR VENTA"; }
+                        Toast.show("Venta guardada pero error al actualizar stock. Recarga el sistema.", "error");
+                    });
                 }
             });
         }
